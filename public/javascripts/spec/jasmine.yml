@@ -12,6 +12,7 @@
 #
 src_files:
   - "javascripts/*.coffee"
+  - "javascripts/chai.js"
 
 # stylesheets
 #

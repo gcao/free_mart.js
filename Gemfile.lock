@@ -1,10 +1,3 @@
-GIT
-  remote: https://github.com/elia/haml2erb.git
-  revision: 5eaaacf3134891f924da539dab31086167f0733f
-  specs:
-    haml2erb (0.3.0.pre.3)
-      haml (~> 3.1.3)
-
 GEM
   remote: http://rubygems.org/
   specs:
@@ -14,7 +7,6 @@ GEM
       execjs
     coffee-script-source (1.6.2)
     daemons (1.1.9)
-    diff-lcs (1.1.3)
     em-websocket (0.4.0)
       eventmachine (>= 0.12.9)
       http_parser.rb (~> 0.5.3)
@@ -33,14 +25,8 @@ GEM
       em-websocket (>= 0.2.0)
       guard (>= 0.4.0)
       multi_json (~> 1.0.3)
-    guard-rspec (0.5.11)
-      guard (>= 0.8.4)
-    guard-sass (0.6.0)
-      guard (>= 0.4.0)
-      sass (>= 3.1)
     guard-shell (0.4.0)
       guard (>= 0.2.0)
-    haml (3.1.8)
     hike (1.2.2)
     http_parser.rb (0.5.3)
     jasmine-core (1.3.1)
@@ -61,15 +47,6 @@ GEM
       rack (>= 1.0)
     rainbow (1.1.4)
     rb-fsevent (0.9.3)
-    rspec (2.12.0)
-      rspec-core (~> 2.12.0)
-      rspec-expectations (~> 2.12.0)
-      rspec-mocks (~> 2.12.0)
-    rspec-core (2.12.2)
-    rspec-expectations (2.12.1)
-      diff-lcs (~> 1.1.3)
-    rspec-mocks (2.12.2)
-    sass (3.2.10)
     sinatra (1.3.4)
       rack (~> 1.4)
       rack-protection (~> 1.3)
@@ -101,16 +78,11 @@ DEPENDENCIES
   guard-bundler (~> 0.1.3)
   guard-jasmine-headless-webkit
   guard-livereload
-  guard-rspec (~> 0.5.2)
-  guard-sass
   guard-shell
-  haml2erb!
   jasmine-headless-webkit
   nokogiri
   rack-livereload
   rb-fsevent (>= 0.4.3.1)
-  rspec
-  sass
   sinatra
   sinatra-contrib
   thin
