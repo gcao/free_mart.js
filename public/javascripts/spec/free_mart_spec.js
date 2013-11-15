@@ -4,9 +4,31 @@
   chai.should();
 
   describe(FreeMart, function() {
-    return it("should work", function() {
+    it("register/request should work", function() {
       FreeMart.register('key', 'value');
       return FreeMart.request('key').should.equal('value');
+    });
+    it("register/request should invoke function with arguments", function() {
+      FreeMart.register('key', function(arg1, arg2) {
+        return "value " + arg1 + " " + arg2;
+      });
+      return FreeMart.request('key', 'a', 'b').should.equal('value a b');
+    });
+    it("requestAsync should work simple value", function() {
+      FreeMart.register('key', 'value');
+      return FreeMart.requestAsync('key').then(function(result) {
+        return result.should.equal('value');
+      });
+    });
+    return it("requestAsync should work with deferred object", function() {
+      var deferred;
+      deferred = new Deferred();
+      FreeMart.register('key', function(arg) {
+        return deferred.resolve(arg);
+      });
+      return FreeMart.requestAsync('key', 'value').then(function(result) {
+        return result.should.equal('value');
+      });
     });
   });
 
