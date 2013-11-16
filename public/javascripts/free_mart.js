@@ -3,16 +3,36 @@
   var __slice = [].slice;
 
   window.FreeMart = (function() {
-    var deferreds, providers;
+    var providers, queues;
 
     function FreeMart() {}
 
-    deferreds = {};
+    queues = {};
 
     providers = {};
 
     FreeMart.register = function(name, value) {
-      return providers[name] = value;
+      var deferred, item, queue, _i, _len, _results;
+      providers[name] = value;
+      if (queues.hasOwnProperty(name)) {
+        queue = queues[name];
+        delete queues[name];
+        _results = [];
+        for (_i = 0, _len = queue.length; _i < _len; _i++) {
+          item = queue[_i];
+          deferred = item.shift();
+          if (typeof value === 'function') {
+            _results.push(deferred.resolve(value.apply(null, item)));
+          } else if (typeof (value != null ? value.promise : void 0) === 'function') {
+            _results.push(value.done(function(result) {
+              return deferred.resolve(result);
+            }));
+          } else {
+            _results.push(deferred.resolve(value));
+          }
+        }
+        return _results;
+      }
     };
 
     FreeMart.request = function() {
@@ -27,20 +47,31 @@
     };
 
     FreeMart.requestAsync = function() {
-      var args, name, result, value;
+      var args, deferred, name, result, value;
       name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      value = providers[name];
-      if (typeof value === 'function') {
-        result = value.apply(null, args);
-        if (typeof result.promise === 'function') {
-          return result;
+      if (providers.hasOwnProperty(name)) {
+        value = providers[name];
+        if (typeof value === 'function') {
+          result = value.apply(null, args);
+          if (typeof (result != null ? result.promise : void 0) === 'function') {
+            return result;
+          } else {
+            return new Deferred().resolve(result);
+          }
+        } else if (typeof (value != null ? value.promise : void 0) === 'function') {
+          return value;
         } else {
-          return new Deferred().resolve(result);
+          return new Deferred().resolve(value);
         }
-      } else if (typeof (value != null ? value.promise : void 0) === 'function') {
-        return value;
       } else {
-        return new Deferred().resolve(value);
+        deferred = new Deferred();
+        args.unshift(deferred);
+        if (queues.hasOwnProperty(name)) {
+          queues[name].push(args);
+        } else {
+          queues[name] = [args];
+        }
+        return deferred;
       }
     };
 
