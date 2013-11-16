@@ -13,22 +13,28 @@ describe FreeMart, ->
 
   it "requestAsync should work simple value", ->
     FreeMart.register 'key', 'value'
-    FreeMart.requestAsync('key').then (result) ->
-      result.should.equal 'value'
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.should.equal 'value'
 
   it "requestAsync should work with functions", ->
     FreeMart.register 'key', -> 'value'
-    FreeMart.requestAsync('key').then (result) ->
-      result.should.equal 'value'
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.should.equal 'value'
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
     FreeMart.register 'key', deferred
 
-    FreeMart.requestAsync('key').then (result) ->
-      result.should.equal 'value'
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
 
     deferred.resolve('value')
+    result.should.equal 'value'
 
   it "requestAsync should work if provider is registered later", ->
     result = null
@@ -59,7 +65,8 @@ describe FreeMart, ->
 
   it "multiple requestAsync should work if provider is registered later", ->
     result_a = null
-    FreeMart.requestAsync('key', 'a').then (value) ->
+    deferred_a = new Deferred()
+    FreeMart.requestAsync('key', deferred_a).then (value) ->
       result_a = value
 
     result_b = null
@@ -72,6 +79,8 @@ describe FreeMart, ->
     FreeMart.requestAsync('key', 'c').then (value) ->
       result_c = value
 
+    deferred_a.resolve 'a'
     result_a.should.equal 'a'
     result_b.should.equal 'b'
     result_c.should.equal 'c'
+

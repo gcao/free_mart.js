@@ -12,7 +12,7 @@
     providers = {};
 
     FreeMart.register = function(name, value) {
-      var deferred, item, queue, _i, _len, _results;
+      var deferred, deferred2, item, queue, result, _i, _len, _results;
       providers[name] = value;
       if (queues.hasOwnProperty(name)) {
         queue = queues[name];
@@ -22,7 +22,15 @@
           item = queue[_i];
           deferred = item.shift();
           if (typeof value === 'function') {
-            _results.push(deferred.resolve(value.apply(null, item)));
+            result = value.apply(null, item);
+            if (typeof (result != null ? result.promise : void 0) === 'function') {
+              deferred2 = deferred;
+              _results.push(result.done(function(newResult) {
+                return deferred2.resolve(newResult);
+              }));
+            } else {
+              _results.push(deferred.resolve(result));
+            }
           } else if (typeof (value != null ? value.promise : void 0) === 'function') {
             _results.push(value.done(function(result) {
               return deferred.resolve(result);
@@ -80,6 +88,23 @@
     };
 
     FreeMart.providers = providers;
+
+    FreeMart.processValue = function() {
+      var args, deferred, result, value;
+      deferred = arguments[0], value = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      if (typeof value === 'function') {
+        result = value.apply(null, args);
+        if (typeof (result != null ? result.promise : void 0) === 'function') {
+          return result;
+        } else {
+          return new Deferred().resolve(result);
+        }
+      } else if (typeof (value != null ? value.promise : void 0) === 'function') {
+        return value;
+      } else {
+        return new Deferred().resolve(value);
+      }
+    };
 
     return FreeMart;
 

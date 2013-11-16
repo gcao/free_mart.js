@@ -18,27 +18,35 @@
       return FreeMart.request('key', 'a', 'b').should.equal('value a b');
     });
     it("requestAsync should work simple value", function() {
+      var result;
       FreeMart.register('key', 'value');
-      return FreeMart.requestAsync('key').then(function(result) {
-        return result.should.equal('value');
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
       });
+      return result.should.equal('value');
     });
     it("requestAsync should work with functions", function() {
+      var result;
       FreeMart.register('key', function() {
         return 'value';
       });
-      return FreeMart.requestAsync('key').then(function(result) {
-        return result.should.equal('value');
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
       });
+      return result.should.equal('value');
     });
     it("requestAsync should work with promises", function() {
-      var deferred;
+      var deferred, result;
       deferred = new Deferred();
       FreeMart.register('key', deferred);
-      FreeMart.requestAsync('key').then(function(result) {
-        return result.should.equal('value');
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
       });
-      return deferred.resolve('value');
+      deferred.resolve('value');
+      return result.should.equal('value');
     });
     it("requestAsync should work if provider is registered later", function() {
       var result;
@@ -72,9 +80,10 @@
       return result.should.equal('value');
     });
     return it("multiple requestAsync should work if provider is registered later", function() {
-      var result_a, result_b, result_c;
+      var deferred_a, result_a, result_b, result_c;
       result_a = null;
-      FreeMart.requestAsync('key', 'a').then(function(value) {
+      deferred_a = new Deferred();
+      FreeMart.requestAsync('key', deferred_a).then(function(value) {
         return result_a = value;
       });
       result_b = null;
@@ -88,6 +97,7 @@
       FreeMart.requestAsync('key', 'c').then(function(value) {
         return result_c = value;
       });
+      deferred_a.resolve('a');
       result_a.should.equal('a');
       result_b.should.equal('b');
       return result_c.should.equal('c');

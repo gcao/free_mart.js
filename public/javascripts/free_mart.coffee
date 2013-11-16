@@ -10,9 +10,17 @@ class window.FreeMart
       for item in queue
         deferred = item.shift()
         if typeof value is 'function'
-          deferred.resolve value(item...)
+          result = value(item...)
+          if typeof result?.promise is 'function'
+            # Save a reference to deferred because it'll be overwritten
+            deferred2 = deferred
+            result.done (newResult) ->
+              deferred2.resolve newResult
+          else
+            deferred.resolve result
         else if typeof value?.promise is 'function'
-          value.done (result) -> deferred.resolve result
+          value.done (result) ->
+            deferred.resolve result
         else
           deferred.resolve value
 
@@ -52,3 +60,14 @@ class window.FreeMart
 
   @providers: providers
 
+  @processValue: (deferred, value, args...) ->
+    if typeof value is 'function'
+      result = value(args...)
+      if typeof result?.promise is 'function'
+        result
+      else
+        new Deferred().resolve result
+    else if typeof value?.promise is 'function'
+      value
+    else
+      new Deferred().resolve value
