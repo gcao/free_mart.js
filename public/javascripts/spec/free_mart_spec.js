@@ -79,7 +79,7 @@
       deferred.resolve('value');
       return result.should.equal('value');
     });
-    return it("multiple requestAsync should work if provider is registered later", function() {
+    it("multiple requestAsync should work if provider is registered later", function() {
       var deferred_a, result_a, result_b, result_c;
       result_a = null;
       deferred_a = new Deferred();
@@ -101,6 +101,51 @@
       result_a.should.equal('a');
       result_b.should.equal('b');
       return result_c.should.equal('c');
+    });
+    it("multiple requestAsync in Deferred.when should work", function() {
+      var result_a, result_b;
+      FreeMart.register('a', 'aa');
+      FreeMart.register('b', 'bb');
+      result_a = null;
+      result_b = null;
+      Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b')).then(function(value_a, value_b) {
+        result_a = value_a;
+        return result_b = value_b;
+      });
+      result_a.should.equal('aa');
+      return result_b.should.equal('bb');
+    });
+    it("multiple requestAsync in Deferred.when should work with deferred objects", function() {
+      var deferred_a, result_a, result_b;
+      deferred_a = new Deferred(0);
+      FreeMart.register('a', deferred_a);
+      FreeMart.register('b', 'bb');
+      result_a = null;
+      result_b = null;
+      Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b')).then(function(value_a, value_b) {
+        result_a = value_a;
+        return result_b = value_b;
+      });
+      deferred_a.resolve('aa');
+      result_a.should.equal('aa');
+      return result_b.should.equal('bb');
+    });
+    return it("multiple requestAsync in Deferred.when should work if providers are registered later", function() {
+      var deferred_a, result_a, result_b;
+      result_a = null;
+      result_b = null;
+      Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b', 'bb')).then(function(value_a, value_b) {
+        result_a = value_a;
+        return result_b = value_b;
+      });
+      deferred_a = new Deferred(0);
+      FreeMart.register('a', deferred_a);
+      FreeMart.register('b', function(arg) {
+        return arg;
+      });
+      deferred_a.resolve('aa');
+      result_a.should.equal('aa');
+      return result_b.should.equal('bb');
     });
   });
 

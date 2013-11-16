@@ -12,7 +12,7 @@ class window.FreeMart
         if typeof value is 'function'
           result = value(item...)
           if typeof result?.promise is 'function'
-            # Save a reference to deferred because it'll be overwritten
+            # Save a reference to deferred because it might be changed
             deferred2 = deferred
             result.done (newResult) ->
               deferred2.resolve newResult

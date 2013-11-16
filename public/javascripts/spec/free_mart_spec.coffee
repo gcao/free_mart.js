@@ -84,3 +84,51 @@ describe FreeMart, ->
     result_b.should.equal 'b'
     result_c.should.equal 'c'
 
+  it "multiple requestAsync in Deferred.when should work", ->
+    FreeMart.register 'a', 'aa'
+    FreeMart.register 'b', 'bb'
+
+    result_a = null
+    result_b = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
+      .then (value_a, value_b) ->
+        result_a = value_a
+        result_b = value_b
+
+    result_a.should.equal 'aa'
+    result_b.should.equal 'bb'
+
+  it "multiple requestAsync in Deferred.when should work with deferred objects", ->
+    deferred_a = new Deferred(0)
+    FreeMart.register 'a', deferred_a
+    FreeMart.register 'b', 'bb'
+
+    result_a = null
+    result_b = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
+      .then (value_a, value_b) ->
+        result_a = value_a
+        result_b = value_b
+
+    deferred_a.resolve('aa')
+
+    result_a.should.equal 'aa'
+    result_b.should.equal 'bb'
+
+  it "multiple requestAsync in Deferred.when should work if providers are registered later", ->
+    result_a = null
+    result_b = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b', 'bb'))
+      .then (value_a, value_b) ->
+        result_a = value_a
+        result_b = value_b
+
+    deferred_a = new Deferred(0)
+    FreeMart.register 'a', deferred_a
+    FreeMart.register 'b', (arg) -> arg
+
+    deferred_a.resolve('aa')
+
+    result_a.should.equal 'aa'
+    result_b.should.equal 'bb'
+
