@@ -3,18 +3,22 @@
   var __slice = [].slice;
 
   window.FreeMart = (function() {
+    var deferreds, providers;
 
     function FreeMart() {}
 
+    deferreds = {};
+
+    providers = {};
+
     FreeMart.register = function(name, value) {
-      this.providers || (this.providers = {});
-      return this.providers[name] = value;
+      return providers[name] = value;
     };
 
     FreeMart.request = function() {
       var args, name, value;
       name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      value = this.providers[name];
+      value = providers[name];
       if (typeof value === 'function') {
         return value.apply(null, args);
       } else {
@@ -23,17 +27,28 @@
     };
 
     FreeMart.requestAsync = function() {
-      var args, deferred, name, value;
+      var args, name, result, value;
       name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      deferred = new Deferred();
-      value = this.providers[name];
+      value = providers[name];
       if (typeof value === 'function') {
-        value.apply(null, args);
+        result = value.apply(null, args);
+        if (typeof result.promise === 'function') {
+          return result;
+        } else {
+          return new Deferred().resolve(result);
+        }
+      } else if (typeof (value != null ? value.promise : void 0) === 'function') {
+        return value;
       } else {
-        deferred.resolve(value);
+        return new Deferred().resolve(value);
       }
-      return deferred;
     };
+
+    FreeMart.clear = function() {
+      return providers = {};
+    };
+
+    FreeMart.providers = providers;
 
     return FreeMart;
 

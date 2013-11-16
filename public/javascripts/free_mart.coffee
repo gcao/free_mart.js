@@ -1,20 +1,32 @@
 class window.FreeMart
+  deferreds = {}
+  providers = {}
+
   @register: (name, value) ->
-    @providers ||= {}
-    @providers[name] = value
+    providers[name] = value
 
   @request: (name, args...) ->
-    value = @providers[name]
+    value = providers[name]
     if typeof value is 'function'
       value(args...)
     else
       value
 
   @requestAsync: (name, args...) ->
-    deferred = new Deferred()
-    value = @providers[name]
+    value = providers[name]
     if typeof value is 'function'
-      value(args...)
+      result = value(args...)
+      if typeof result.promise is 'function'
+        result
+      else
+        new Deferred().resolve result
+    else if typeof value?.promise is 'function'
+      value
     else
-      deferred.resolve value
-    deferred
+      new Deferred().resolve value
+
+  @clear: ->
+    providers = {}
+
+  @providers: providers
+

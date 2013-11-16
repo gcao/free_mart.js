@@ -4,6 +4,9 @@
   chai.should();
 
   describe(FreeMart, function() {
+    beforeEach(function() {
+      return FreeMart.clear();
+    });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
       return FreeMart.request('key').should.equal('value');
@@ -20,15 +23,28 @@
         return result.should.equal('value');
       });
     });
-    return it("requestAsync should work with deferred object", function() {
-      var deferred;
-      deferred = new Deferred();
-      FreeMart.register('key', function(arg) {
-        return deferred.resolve(arg);
+    it("requestAsync should work with functions", function() {
+      FreeMart.register('key', function() {
+        return 'value';
       });
-      return FreeMart.requestAsync('key', 'value').then(function(result) {
+      return FreeMart.requestAsync('key').then(function(result) {
         return result.should.equal('value');
       });
+    });
+    it("requestAsync should work with promises", function() {
+      var deferred;
+      deferred = new Deferred();
+      FreeMart.register('key', deferred);
+      FreeMart.requestAsync('key').then(function(result) {
+        return result.should.equal('value');
+      });
+      return deferred.resolve('value');
+    });
+    return it("requestAsync should work if provider is registered later", function() {
+      FreeMart.requestAsync('key').then(function(result) {
+        return result.should.equal('value');
+      });
+      return FreeMart.register('key', 'value');
     });
   });
 

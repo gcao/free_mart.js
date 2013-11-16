@@ -1,6 +1,8 @@
 chai.should()
 
 describe FreeMart, ->
+  beforeEach -> FreeMart.clear()
+
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
     FreeMart.request('key').should.equal 'value'
@@ -14,9 +16,23 @@ describe FreeMart, ->
     FreeMart.requestAsync('key').then (result) ->
       result.should.equal 'value'
 
-  it "requestAsync should work with deferred object", ->
-    deferred = new Deferred()
-    FreeMart.register 'key', (arg) -> deferred.resolve(arg)
-    FreeMart.requestAsync('key', 'value').then (result) ->
+  it "requestAsync should work with functions", ->
+    FreeMart.register 'key', -> 'value'
+    FreeMart.requestAsync('key').then (result) ->
       result.should.equal 'value'
+
+  it "requestAsync should work with promises", ->
+    deferred = new Deferred()
+    FreeMart.register 'key', deferred
+
+    FreeMart.requestAsync('key').then (result) ->
+      result.should.equal 'value'
+
+    deferred.resolve('value')
+
+  it "requestAsync should work if provider is registered later", ->
+    FreeMart.requestAsync('key').then (result) ->
+      result.should.equal 'value'
+
+    FreeMart.register 'key', 'value'
 
