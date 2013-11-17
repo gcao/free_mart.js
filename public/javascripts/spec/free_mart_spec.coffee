@@ -132,3 +132,14 @@ describe FreeMart, ->
     result_a.should.equal 'aa'
     result_b.should.equal 'bb'
 
+  it "register can take regular expression as key", ->
+
+  it "provider can optionally take key requested as first arg", ->
+    #FreeMart.register 'key', keyArg: true, (key, arg) -> "#{key}:#{arg}"
+    #FreeMart.request('key', 'value').should.equal('key:value')
+
+  it "order of registration should be kept", ->
+    #FreeMart.register /a.*/, -> 'first'
+    #FreeMart.register /ab.*/, -> 'second'
+    #FreeMart.request('abc').should.equal 'first'
+

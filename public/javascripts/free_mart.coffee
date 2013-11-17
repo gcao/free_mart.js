@@ -1,12 +1,15 @@
+# Registration are stored based on order
+# regexp => hash => regexp
+# Providers can be deregistered
 class window.FreeMart
   queues = {}
   providers = {}
 
-  @register: (name, value) ->
-    providers[name] = value
-    if queues.hasOwnProperty name
-      queue = queues[name]
-      delete queues[name]
+  @register: (key, value) ->
+    providers[key] = value
+    if queues.hasOwnProperty key
+      queue = queues[key]
+      delete queues[key]
       for item in queue
         deferred = item.shift()
         if typeof value is 'function'
@@ -24,16 +27,16 @@ class window.FreeMart
         else
           deferred.resolve value
 
-  @request: (name, args...) ->
-    value = providers[name]
+  @request: (key, args...) ->
+    value = providers[key]
     if typeof value is 'function'
       value(args...)
     else
       value
 
-  @requestAsync: (name, args...) ->
-    if providers.hasOwnProperty name
-      value = providers[name]
+  @requestAsync: (key, args...) ->
+    if providers.hasOwnProperty key
+      value = providers[key]
       if typeof value is 'function'
         result = value(args...)
         if typeof result?.promise is 'function'
@@ -48,10 +51,10 @@ class window.FreeMart
       deferred = new Deferred()
 
       args.unshift deferred
-      if queues.hasOwnProperty name
-        queues[name].push args
+      if queues.hasOwnProperty key
+        queues[key].push args
       else
-        queues[name] = [args]
+        queues[key] = [args]
 
       deferred
 

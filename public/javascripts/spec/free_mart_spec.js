@@ -130,7 +130,7 @@
       result_a.should.equal('aa');
       return result_b.should.equal('bb');
     });
-    return it("multiple requestAsync in Deferred.when should work if providers are registered later", function() {
+    it("multiple requestAsync in Deferred.when should work if providers are registered later", function() {
       var deferred_a, result_a, result_b;
       result_a = null;
       result_b = null;
@@ -147,6 +147,9 @@
       result_a.should.equal('aa');
       return result_b.should.equal('bb');
     });
+    it("register can take regular expression as key", function() {});
+    it("provider can optionally take key requested as first arg", function() {});
+    return it("order of registration should be kept", function() {});
   });
 
 }).call(this);

@@ -11,12 +11,12 @@
 
     providers = {};
 
-    FreeMart.register = function(name, value) {
+    FreeMart.register = function(key, value) {
       var deferred, deferred2, item, queue, result, _i, _len, _results;
-      providers[name] = value;
-      if (queues.hasOwnProperty(name)) {
-        queue = queues[name];
-        delete queues[name];
+      providers[key] = value;
+      if (queues.hasOwnProperty(key)) {
+        queue = queues[key];
+        delete queues[key];
         _results = [];
         for (_i = 0, _len = queue.length; _i < _len; _i++) {
           item = queue[_i];
@@ -44,9 +44,9 @@
     };
 
     FreeMart.request = function() {
-      var args, name, value;
-      name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      value = providers[name];
+      var args, key, value;
+      key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      value = providers[key];
       if (typeof value === 'function') {
         return value.apply(null, args);
       } else {
@@ -55,10 +55,10 @@
     };
 
     FreeMart.requestAsync = function() {
-      var args, deferred, name, result, value;
-      name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      if (providers.hasOwnProperty(name)) {
-        value = providers[name];
+      var args, deferred, key, result, value;
+      key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      if (providers.hasOwnProperty(key)) {
+        value = providers[key];
         if (typeof value === 'function') {
           result = value.apply(null, args);
           if (typeof (result != null ? result.promise : void 0) === 'function') {
@@ -74,10 +74,10 @@
       } else {
         deferred = new Deferred();
         args.unshift(deferred);
-        if (queues.hasOwnProperty(name)) {
-          queues[name].push(args);
+        if (queues.hasOwnProperty(key)) {
+          queues[key].push(args);
         } else {
-          queues[name] = [args];
+          queues[key] = [args];
         }
         return deferred;
       }
