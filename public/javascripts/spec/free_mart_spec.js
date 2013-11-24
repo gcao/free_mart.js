@@ -17,7 +17,7 @@
       });
       return FreeMart.request('key', 'a', 'b').should.equal('value a b');
     });
-    it("requestAsync should work simple value", function() {
+    it("requestAsync should work with simple value", function() {
       var result;
       FreeMart.register('key', 'value');
       result = null;

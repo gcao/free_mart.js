@@ -1,3 +1,87 @@
+InUse =
+  process: (key, options, args...) ->
+    try
+      @in_use_keys << key
+      process_ key, options, args...
+    finally
+      @in_use_keys.splice(@in_use_keys.indexOf(key), 1)
+
+  processing: (key) ->
+    @in_use_keys.indexOf(key) >= 0
+
+  in_use_keys: ->
+    @in_use ||= []
+
+class Registry extends Array
+  add: (key, provider) ->
+    if last instanceof HashRegistry and not last.accept key
+      last[key] = provider
+    else
+      if key instanceof String
+        child_registry = new HashRegistry()
+        child_registry[key] = provider
+      else
+        child_registry = new FuzzyRegistry key, provider
+      push child_registry
+
+  accept: (key) ->
+    for item in @
+      if item.accept key then return true
+
+  process: (key, options, args...) ->
+    for i in [@length-1..0]
+      item = this[0]
+      continue if item.processing key
+      result = item.process key, options, args...
+      return result unless result is NOT_FOUND
+
+    NOT_FOUND
+    #if options.all
+    #  result = []
+    #  for item in @
+    #    item_result = item.process key, options, args...
+    #    result.push item_result unless item_result == NOT_FOUND
+    #  result
+    #else
+    #  reverse_each do |item|
+    #    next if item.processing? key
+    #    result = item.process key, options, *args
+    #    return result unless result == NOT_FOUND
+    #  end
+    #  NOT_FOUND
+
+class HashRegistry
+  for own key, value of InUse
+    @[key] = value
+
+  accept: (key) ->
+    @[key]
+
+  process_: (key, options, args...) ->
+    provider = self[key]
+    return NOT_FOUND unless provider
+    provider.call options, args...
+
+class FuzzyRegistry
+  for own key, value of InUse
+    @[key] = value
+
+  constructor: (@fuzzy_key, @provider) ->
+
+  accept: (key) ->
+    if @fuzzy_key instanceof RegExp
+      @fuzzy_key.match(key)
+    else if @fuzzy_key instanceof Array
+      for item in @fuzzy_key
+        if item instanceof String
+          return true if item is key
+        else
+          return true if key.match(item)
+
+  process_: (key, options, args...) ->
+    return NOT_FOUND unless @accept key
+    @provider.process options, args...
+
 # Registration are stored based on order
 # regexp => hash => regexp
 # Providers can be deregistered
@@ -63,14 +147,14 @@ class window.FreeMart
 
   @providers: providers
 
-  @processValue: (deferred, value, args...) ->
-    if typeof value is 'function'
-      result = value(args...)
-      if typeof result?.promise is 'function'
-        result
-      else
-        new Deferred().resolve result
-    else if typeof value?.promise is 'function'
-      value
-    else
-      new Deferred().resolve value
+  #@processValue: (deferred, value, args...) ->
+  #  if typeof value is 'function'
+  #    result = value(args...)
+  #    if typeof result?.promise is 'function'
+  #      result
+  #    else
+  #      new Deferred().resolve result
+  #  else if typeof value?.promise is 'function'
+  #    value
+  #  else
+  #    new Deferred().resolve value

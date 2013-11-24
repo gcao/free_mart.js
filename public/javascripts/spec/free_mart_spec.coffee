@@ -11,7 +11,7 @@ describe FreeMart, ->
     FreeMart.register 'key', (arg1, arg2) -> "value #{arg1} #{arg2}"
     FreeMart.request('key', 'a', 'b').should.equal 'value a b'
 
-  it "requestAsync should work simple value", ->
+  it "requestAsync should work with simple value", ->
     FreeMart.register 'key', 'value'
     result = null
     FreeMart.requestAsync('key').then (value) ->
