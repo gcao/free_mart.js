@@ -3,13 +3,13 @@ chai.should()
 describe FreeMart, ->
   beforeEach -> FreeMart.clear()
 
-  #it "register/request should work", ->
-  #  FreeMart.register 'key', 'value'
-  #  FreeMart.request('key').should.equal 'value'
+  it "register/request should work", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.request('key').should.equal 'value'
 
-  #it "register/request should invoke function with arguments", ->
-  #  FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
-  #  FreeMart.request('key', 'a', 'b').should.equal 'value a b'
+  it "register/request should invoke function with arguments", ->
+    FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
+    FreeMart.request('key', 'a', 'b').should.equal 'value a b'
 
   it "requestAsync should work with simple value", ->
     FreeMart.register 'key', 'value'
@@ -18,23 +18,23 @@ describe FreeMart, ->
       result = value
     result.should.equal 'value'
 
-  #it "requestAsync should work with functions", ->
-  #  FreeMart.register 'key', -> 'value'
-  #  result = null
-  #  FreeMart.requestAsync('key').then (value) ->
-  #    result = value
-  #  result.should.equal 'value'
+  it "requestAsync should work with functions", ->
+    FreeMart.register 'key', -> 'value'
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.should.equal 'value'
 
-  #it "requestAsync should work with promises", ->
-  #  deferred = new Deferred()
-  #  FreeMart.register 'key', deferred
+  it "requestAsync should work with promises", ->
+    deferred = new Deferred()
+    FreeMart.register 'key', deferred
 
-  #  result = null
-  #  FreeMart.requestAsync('key').then (value) ->
-  #    result = value
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
 
-  #  deferred.resolve('value')
-  #  result.should.equal 'value'
+    deferred.resolve('value')
+    result.should.equal 'value'
 
   ##it "requestAsync should work if provider is registered later", ->
   ##  result = null

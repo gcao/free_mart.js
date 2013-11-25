@@ -6,6 +6,8 @@ toString = (obj, options = {}) ->
     result = result.substring(1, result.length - 1)
   result
 
+isDeferred = (o) -> typeof o?.promise is 'function'
+
 InUse =
   process: (key, options, args...) ->
     try
@@ -46,6 +48,7 @@ class Registry
     console.log "Registry.process(#{key})"
     for i in [@storage.length-1..0]
       item = @storage[0]
+      continue unless item.accept key
       continue if item.processing key
       result = item.process key, options, args...
       return result unless result is NOT_FOUND
@@ -76,6 +79,7 @@ class HashRegistry
     @[key]
 
   process_: (key, options, args...) ->
+    console.log "HashRegistry.process_(#{key})"
     provider = @[key]
     return NOT_FOUND unless provider
     provider.process options, args...
@@ -107,10 +111,20 @@ class Provider
 
   process: (args...) ->
     console.log "Provider.process(#{toString(args, strip_brackets: true)})"
-    if typeof @value is 'function'
-      @value args...
+    result =
+      if typeof @value is 'function'
+        @value args...
+      else
+        @value
+
+    options = args[0]
+    if options?.async
+      if isDeferred result
+        result
+      else
+        new Deferred().resolve(result)
     else
-      @value
+      result
 
 ## Deferred requests - will be processed once a provider is registered
 #class DeferredRequest
@@ -149,18 +163,19 @@ class window.FreeMart
     registry.process key, {}, args...
 
   @requestAsync: (key, args...) ->
-    if registry.hasOwnProperty key
-      value = registry[key]
-      if typeof value is 'function'
-        result = value(args...)
-        if typeof result?.promise is 'function'
-          result
-        else
-          new Deferred().resolve result
-      else if typeof value?.promise is 'function'
-        value
-      else
-        new Deferred().resolve value
+    registry.process key, {async: true}, args...
+    #if registry.hasOwnProperty key
+    #  value = registry[key]
+    #  if typeof value is 'function'
+    #    result = value(args...)
+    #    if typeof result?.promise is 'function'
+    #      result
+    #    else
+    #      new Deferred().resolve result
+    #  else if typeof value?.promise is 'function'
+    #    value
+    #  else
+    #    new Deferred().resolve value
     #else
     #  deferred = new Deferred()
 
