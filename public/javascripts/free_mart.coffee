@@ -1,36 +1,51 @@
+NOT_FOUND = {}
+
+toString = (obj, options = {}) ->
+  result = JSON.stringify(obj).replace(/"/g, "'")
+  if options.strip_brackets and result[0] is '['
+    result = result.substring(1, result.length - 1)
+  result
+
 InUse =
   process: (key, options, args...) ->
     try
       @in_use_keys << key
-      process_ key, options, args...
+      @process_ key, options, args...
     finally
       @in_use_keys.splice(@in_use_keys.indexOf(key), 1)
 
   processing: (key) ->
     @in_use_keys.indexOf(key) >= 0
 
-  in_use_keys: ->
-    @in_use ||= []
+class Registry
+  constructor: ->
+    @storage = []
 
-class Registry extends Array
+  clear: ->
+    @storage = []
+
   add: (key, provider) ->
+    last = if @storage.length > 0 then @storage[@storage.length - 1]
     if last instanceof HashRegistry and not last.accept key
       last[key] = provider
     else
-      if key instanceof String
+      if typeof key is 'string'
         child_registry = new HashRegistry()
         child_registry[key] = provider
       else
         child_registry = new FuzzyRegistry key, provider
-      push child_registry
+      @storage.push child_registry
+
+    provider
 
   accept: (key) ->
-    for item in @
+    for item in @storage
       if item.accept key then return true
 
   process: (key, options, args...) ->
-    for i in [@length-1..0]
-      item = this[0]
+    console.log "Registry.process(#{key})"
+    for i in [@storage.length-1..0]
+      item = @storage[0]
       continue if item.processing key
       result = item.process key, options, args...
       return result unless result is NOT_FOUND
@@ -52,21 +67,25 @@ class Registry extends Array
 
 class HashRegistry
   for own key, value of InUse
-    @[key] = value
+    @.prototype[key] = value
+
+  constructor: ->
+    @in_use_keys = []
 
   accept: (key) ->
     @[key]
 
   process_: (key, options, args...) ->
-    provider = self[key]
+    provider = @[key]
     return NOT_FOUND unless provider
-    provider.call options, args...
+    provider.process options, args...
 
 class FuzzyRegistry
   for own key, value of InUse
-    @[key] = value
+    @.prototype[key] = value
 
   constructor: (@fuzzy_key, @provider) ->
+    @in_use_keys = []
 
   accept: (key) ->
     if @fuzzy_key instanceof RegExp
@@ -82,45 +101,56 @@ class FuzzyRegistry
     return NOT_FOUND unless @accept key
     @provider.process options, args...
 
+class Provider
+  constructor: (@key, @value, @options) ->
+    console.log 'Provider.constructor'
+
+  process: (args...) ->
+    console.log "Provider.process(#{toString(args, strip_brackets: true)})"
+    if typeof @value is 'function'
+      @value args...
+    else
+      @value
+
+## Deferred requests - will be processed once a provider is registered
+#class DeferredRequest
+#  constructor: (@key, @args...) ->
+
 # Registration are stored based on order
 # regexp => hash => regexp
 # Providers can be deregistered
 class window.FreeMart
-  queues = {}
-  providers = {}
+  #queues = {}
+  registry = new Registry()
 
   @register: (key, value) ->
-    providers[key] = value
-    if queues.hasOwnProperty key
-      queue = queues[key]
-      delete queues[key]
-      for item in queue
-        deferred = item.shift()
-        if typeof value is 'function'
-          result = value(item...)
-          if typeof result?.promise is 'function'
-            # Save a reference to deferred because it might be changed
-            deferred2 = deferred
-            result.done (newResult) ->
-              deferred2.resolve newResult
-          else
-            deferred.resolve result
-        else if typeof value?.promise is 'function'
-          value.done (result) ->
-            deferred.resolve result
-        else
-          deferred.resolve value
+    registry.add key, new Provider(key, value)
+    #if queues.hasOwnProperty key
+    #  queue = queues[key]
+    #  delete queues[key]
+    #  for item in queue
+    #    deferred = item.shift()
+    #    if typeof value is 'function'
+    #      result = value(item...)
+    #      if typeof result?.promise is 'function'
+    #        # Save a reference to deferred because it might be changed
+    #        deferred2 = deferred
+    #        result.done (newResult) ->
+    #          deferred2.resolve newResult
+    #      else
+    #        deferred.resolve result
+    #    else if typeof value?.promise is 'function'
+    #      value.done (result) ->
+    #        deferred.resolve result
+    #    else
+    #      deferred.resolve value
 
   @request: (key, args...) ->
-    value = providers[key]
-    if typeof value is 'function'
-      value(args...)
-    else
-      value
+    registry.process key, {}, args...
 
   @requestAsync: (key, args...) ->
-    if providers.hasOwnProperty key
-      value = providers[key]
+    if registry.hasOwnProperty key
+      value = registry[key]
       if typeof value is 'function'
         result = value(args...)
         if typeof result?.promise is 'function'
@@ -131,21 +161,20 @@ class window.FreeMart
         value
       else
         new Deferred().resolve value
-    else
-      deferred = new Deferred()
+    #else
+    #  deferred = new Deferred()
 
-      args.unshift deferred
-      if queues.hasOwnProperty key
-        queues[key].push args
-      else
-        queues[key] = [args]
+    #  args.unshift deferred
+    #  if queues.hasOwnProperty key
+    #    queues[key].push args
+    #  else
+    #    queues[key] = [args]
 
-      deferred
+    #  deferred
 
-  @clear: ->
-    providers = {}
+  @clear: -> registry.clear()
 
-  @providers: providers
+  @registry: registry
 
   #@processValue: (deferred, value, args...) ->
   #  if typeof value is 'function'
