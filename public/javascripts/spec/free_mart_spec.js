@@ -5,7 +5,8 @@
 
   describe(FreeMart, function() {
     beforeEach(function() {
-      return FreeMart.clear();
+      FreeMart.clear();
+      return window.log = function() {};
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
@@ -37,7 +38,7 @@
       });
       return result.should.equal('value');
     });
-    return it("requestAsync should work with promises", function() {
+    it("requestAsync should work with promises", function() {
       var deferred, result;
       deferred = new Deferred();
       FreeMart.register('key', deferred);
@@ -47,6 +48,63 @@
       });
       deferred.resolve('value');
       return result.should.equal('value');
+    });
+    it("requestAsync should work if provider is registered later", function() {
+      var result;
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      FreeMart.register('key', 'value');
+      return result.should.equal('value');
+    });
+    it("requestAsync should work if provider is a function and is registered later", function() {
+      var result;
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      FreeMart.register('key', function() {
+        return 'value';
+      });
+      return result.should.equal('value');
+    });
+    it("requestAsync should work if provider is a deferred object and is registered later", function() {
+      var deferred, result;
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      deferred = new Deferred();
+      FreeMart.register('key', deferred);
+      deferred.resolve('value');
+      return result.should.equal('value');
+    });
+    return it("multiple requestAsync should work if provider is registered later", function() {
+      var deferred_a, result_a, result_b, result_c;
+      window.log = function(msg) {
+        return console.log(msg);
+      };
+      result_a = null;
+      deferred_a = new Deferred();
+      FreeMart.requestAsync('key', deferred_a).then(function(value) {
+        return result_a = value;
+      });
+      result_b = null;
+      FreeMart.requestAsync('key', 'b').then(function(value) {
+        return result_b = value;
+      });
+      FreeMart.register('key', function(arg) {
+        return arg;
+      });
+      result_c = null;
+      FreeMart.requestAsync('key', 'c').then(function(value) {
+        return result_c = value;
+      });
+      deferred_a.resolve('a');
+      result_a.should.equal('a');
+      result_b.should.equal('b');
+      return result_c.should.equal('c');
     });
   });
 

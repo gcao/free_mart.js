@@ -1,4 +1,7 @@
-NOT_FOUND = {}
+NOT_FOUND   = {}
+NO_PROVIDER = {}
+
+this.log = (msg) -> console.log msg
 
 toString = (obj, options = {}) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
@@ -45,15 +48,23 @@ class Registry
       if item.accept key then return true
 
   process: (key, options, args...) ->
-    console.log "Registry.process(#{key})"
+    log "Registry.process(#{key})"
+
+    if @storage.length is 0
+      return NO_PROVIDER
+
+    processed = false
     for i in [@storage.length-1..0]
       item = @storage[0]
       continue unless item.accept key
       continue if item.processing key
+
+      processed = true
       result = item.process key, options, args...
       return result unless result is NOT_FOUND
 
-    NOT_FOUND
+    if processed then NOT_FOUND else NO_PROVIDER
+
     #if options.all
     #  result = []
     #  for item in @
@@ -79,7 +90,7 @@ class HashRegistry
     @[key]
 
   process_: (key, options, args...) ->
-    console.log "HashRegistry.process_(#{key})"
+    log "HashRegistry.process_(#{key})"
     provider = @[key]
     return NOT_FOUND unless provider
     provider.process options, args...
@@ -107,10 +118,10 @@ class FuzzyRegistry
 
 class Provider
   constructor: (@key, @value, @options) ->
-    console.log 'Provider.constructor'
+    log 'Provider.constructor'
 
   process: (args...) ->
-    console.log "Provider.process(#{toString(args, strip_brackets: true)})"
+    log "Provider.process(#{toString(args, strip_brackets: true)})"
     result =
       if typeof @value is 'function'
         @value args...
@@ -126,19 +137,20 @@ class Provider
     else
       result
 
-## Deferred requests - will be processed once a provider is registered
-#class DeferredRequest
-#  constructor: (@key, @args...) ->
-
 # Registration are stored based on order
 # regexp => hash => regexp
 # Providers can be deregistered
-class window.FreeMart
-  #queues = {}
+class this.FreeMart
+  queues = {}
   registry = new Registry()
 
   @register: (key, value) ->
     registry.add key, new Provider(key, value)
+    if queues[key]
+      for request in queues[key]
+        @requestAsync(request.key, request.args...).then (result) ->
+          request.resolve(result)
+      delete queues[key]
     #if queues.hasOwnProperty key
     #  queue = queues[key]
     #  delete queues[key]
@@ -162,8 +174,24 @@ class window.FreeMart
   @request: (key, args...) ->
     registry.process key, {}, args...
 
+  createDeferredRequest = (key, args...) ->
+    request = new Deferred()
+    request.key = key
+    request.args = args
+    request
+
   @requestAsync: (key, args...) ->
-    registry.process key, {async: true}, args...
+    result = registry.process key, {async: true}, args...
+    if result is NO_PROVIDER
+      request = createDeferredRequest key, args
+      queues[key] ||= []
+      queues[key].push request
+      request
+    else if result is NOT_FOUND
+      throw "NOT FOUND: #{key}"
+    else
+      result
+
     #if registry.hasOwnProperty key
     #  value = registry[key]
     #  if typeof value is 'function'

@@ -1,7 +1,9 @@
 chai.should()
 
 describe FreeMart, ->
-  beforeEach -> FreeMart.clear()
+  beforeEach ->
+    FreeMart.clear()
+    window.log = ->
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -36,53 +38,54 @@ describe FreeMart, ->
     deferred.resolve('value')
     result.should.equal 'value'
 
-  ##it "requestAsync should work if provider is registered later", ->
-  ##  result = null
-  ##  FreeMart.requestAsync('key').then (value) ->
-  ##    result = value
+  it "requestAsync should work if provider is registered later", ->
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
 
-  ##  FreeMart.register 'key', 'value'
-  ##  result.should.equal 'value'
+    FreeMart.register 'key', 'value'
+    result.should.equal 'value'
 
-  ##it "requestAsync should work if provider is a function and is registered later", ->
-  ##  result = null
-  ##  FreeMart.requestAsync('key').then (value) ->
-  ##    result = value
+  it "requestAsync should work if provider is a function and is registered later", ->
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
 
-  ##  FreeMart.register 'key', -> 'value'
-  ##  result.should.equal 'value'
+    FreeMart.register 'key', -> 'value'
+    result.should.equal 'value'
 
-  ##it "requestAsync should work if provider is a deferred object and is registered later", ->
-  ##  result = null
-  ##  FreeMart.requestAsync('key').then (value) ->
-  ##    result = value
+  it "requestAsync should work if provider is a deferred object and is registered later", ->
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
 
-  ##  deferred = new Deferred()
-  ##  FreeMart.register 'key', deferred
-  ##  deferred.resolve 'value'
+    deferred = new Deferred()
+    FreeMart.register 'key', deferred
+    deferred.resolve 'value'
 
-  ##  result.should.equal 'value'
+    result.should.equal 'value'
 
-  ##it "multiple requestAsync should work if provider is registered later", ->
-  ##  result_a = null
-  ##  deferred_a = new Deferred()
-  ##  FreeMart.requestAsync('key', deferred_a).then (value) ->
-  ##    result_a = value
+  it "multiple requestAsync should work if provider is registered later", ->
+    window.log = (msg) -> console.log msg
+    result_a = null
+    deferred_a = new Deferred()
+    FreeMart.requestAsync('key', deferred_a).then (value) ->
+      result_a = value
 
-  ##  result_b = null
-  ##  FreeMart.requestAsync('key', 'b').then (value) ->
-  ##    result_b = value
+    result_b = null
+    FreeMart.requestAsync('key', 'b').then (value) ->
+      result_b = value
 
-  ##  FreeMart.register 'key', (arg) -> arg
+    FreeMart.register 'key', (arg) -> arg
 
-  ##  result_c = null
-  ##  FreeMart.requestAsync('key', 'c').then (value) ->
-  ##    result_c = value
+    result_c = null
+    FreeMart.requestAsync('key', 'c').then (value) ->
+      result_c = value
 
-  ##  deferred_a.resolve 'a'
-  ##  result_a.should.equal 'a'
-  ##  result_b.should.equal 'b'
-  ##  result_c.should.equal 'c'
+    deferred_a.resolve 'a'
+    result_a.should.equal 'a'
+    result_b.should.equal 'b'
+    result_c.should.equal 'c'
 
   #it "multiple requestAsync in Deferred.when should work", ->
   #  FreeMart.register 'a', 'aa'
