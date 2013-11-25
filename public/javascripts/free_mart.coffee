@@ -3,11 +3,9 @@ NO_PROVIDER = {}
 
 this.log = (msg) -> console.log msg
 
-toString = (obj, options = {}) ->
+toString = (obj...) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
-  if options.strip_brackets and result[0] is '['
-    result = result.substring(1, result.length - 1)
-  result
+  result.substring(1, result.length - 1)
 
 isDeferred = (o) -> typeof o?.promise is 'function'
 
@@ -48,7 +46,7 @@ class Registry
       if item.accept key then return true
 
   process: (key, options, args...) ->
-    log "Registry.process(#{key})"
+    log "Registry.process(#{toString key, options, args...})"
 
     if @storage.length is 0
       return NO_PROVIDER
@@ -90,9 +88,9 @@ class HashRegistry
     @[key]
 
   process_: (key, options, args...) ->
-    log "HashRegistry.process_(#{key})"
+    log "HashRegistry.process_(#{toString key, options, args...})"
     provider = @[key]
-    return NOT_FOUND unless provider
+    return NO_PROVIDER unless provider
     provider.process options, args...
 
 class FuzzyRegistry
@@ -113,15 +111,16 @@ class FuzzyRegistry
           return true if key.match(item)
 
   process_: (key, options, args...) ->
-    return NOT_FOUND unless @accept key
+    log "FuzzyRegistry.process_(#{toString key, options, args...})"
+    return NO_PROVIDER unless @accept key
     @provider.process options, args...
 
 class Provider
-  constructor: (@key, @value, @options) ->
-    log 'Provider.constructor'
+  constructor: (@key, @value) ->
+    log "Provider.constructor(#{toString @key, @value})"
 
   process: (args...) ->
-    log "Provider.process(#{toString(args, strip_brackets: true)})"
+    log "Provider.process(#{toString args...})"
     result =
       if typeof @value is 'function'
         @value args...
@@ -145,10 +144,25 @@ class this.FreeMart
   registry = new Registry()
 
   @register: (key, value) ->
+    log "FreeMart.register(#{toString key, value})"
     registry.add key, new Provider(key, value)
     if queues[key]
       for request in queues[key]
-        @requestAsync(request.key, request.args...).then (result) ->
+        log "Deferred request: #{toString key, request.args...}"
+        result = registry.process key, {async: true}, request.args...
+        log "Deferred request result: #{toString result}"
+        if result is NOT_FOUND
+          throw "NOT FOUND: #{key}"
+        else if isDeferred result
+          # How do we ensure request in the callback is not changed
+          # by the iterator to another
+          `var req = request`
+          log req
+          result.then (v) ->
+            log toString req
+            log 'VVVVVVVVVV'
+            req.resolve(v)
+        else
           request.resolve(result)
       delete queues[key]
     #if queues.hasOwnProperty key
@@ -181,9 +195,10 @@ class this.FreeMart
     request
 
   @requestAsync: (key, args...) ->
+    log "FreeMart.requestAsync(#{toString key, args...})"
     result = registry.process key, {async: true}, args...
     if result is NO_PROVIDER
-      request = createDeferredRequest key, args
+      request = createDeferredRequest key, args...
       queues[key] ||= []
       queues[key].push request
       request

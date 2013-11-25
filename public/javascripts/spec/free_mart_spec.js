@@ -81,30 +81,30 @@
       return result.should.equal('value');
     });
     return it("multiple requestAsync should work if provider is registered later", function() {
-      var deferred_a, result_a, result_b, result_c;
+      var deferredA, requestA, resultA, resultB;
       window.log = function(msg) {
         return console.log(msg);
       };
-      result_a = null;
-      deferred_a = new Deferred();
-      FreeMart.requestAsync('key', deferred_a).then(function(value) {
-        return result_a = value;
+      resultA = null;
+      deferredA = new Deferred();
+      requestA = FreeMart.requestAsync('key', deferredA).then(function(value) {
+        console.log('=========');
+        console.log(value);
+        return resultA = value;
       });
-      result_b = null;
+      resultB = null;
       FreeMart.requestAsync('key', 'b').then(function(value) {
-        return result_b = value;
+        return resultB = value;
       });
-      FreeMart.register('key', function(arg) {
+      FreeMart.register('key', function(_, arg) {
+        console.log('---------');
+        console.log(JSON.stringify(_));
+        console.log(arg.promise);
         return arg;
       });
-      result_c = null;
-      FreeMart.requestAsync('key', 'c').then(function(value) {
-        return result_c = value;
-      });
-      deferred_a.resolve('a');
-      result_a.should.equal('a');
-      result_b.should.equal('b');
-      return result_c.should.equal('c');
+      deferredA.resolve('a');
+      resultA.should.equal('a');
+      return resultB.should.equal('b');
     });
   });
 

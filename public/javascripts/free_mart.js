@@ -12,16 +12,11 @@
     return console.log(msg);
   };
 
-  toString = function(obj, options) {
-    var result;
-    if (options == null) {
-      options = {};
-    }
+  toString = function() {
+    var obj, result;
+    obj = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     result = JSON.stringify(obj).replace(/"/g, "'");
-    if (options.strip_brackets && result[0] === '[') {
-      result = result.substring(1, result.length - 1);
-    }
-    return result;
+    return result.substring(1, result.length - 1);
   };
 
   isDeferred = function(o) {
@@ -85,7 +80,7 @@
     Registry.prototype.process = function() {
       var args, i, item, key, options, processed, result, _i, _ref;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("Registry.process(" + key + ")");
+      log("Registry.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       if (this.storage.length === 0) {
         return NO_PROVIDER;
       }
@@ -135,10 +130,10 @@
     HashRegistry.prototype.process_ = function() {
       var args, key, options, provider;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("HashRegistry.process_(" + key + ")");
+      log("HashRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       provider = this[key];
       if (!provider) {
-        return NOT_FOUND;
+        return NO_PROVIDER;
       }
       return provider.process.apply(provider, [options].concat(__slice.call(args)));
     };
@@ -186,8 +181,9 @@
     FuzzyRegistry.prototype.process_ = function() {
       var args, key, options, _ref;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      log("FuzzyRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       if (!this.accept(key)) {
-        return NOT_FOUND;
+        return NO_PROVIDER;
       }
       return (_ref = this.provider).process.apply(_ref, [options].concat(__slice.call(args)));
     };
@@ -198,19 +194,16 @@
 
   Provider = (function() {
 
-    function Provider(key, value, options) {
+    function Provider(key, value) {
       this.key = key;
       this.value = value;
-      this.options = options;
-      log('Provider.constructor');
+      log("Provider.constructor(" + (toString(this.key, this.value)) + ")");
     }
 
     Provider.prototype.process = function() {
       var args, options, result;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      log("Provider.process(" + (toString(args, {
-        strip_brackets: true
-      })) + ")");
+      log("Provider.process(" + (toString.apply(null, args)) + ")");
       result = typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
       options = args[0];
       if (options != null ? options.async : void 0) {
@@ -238,15 +231,32 @@
     registry = new Registry();
 
     FreeMart.register = function(key, value) {
-      var request, _i, _len, _ref;
+      var request, result, _i, _len, _ref;
+      log("FreeMart.register(" + (toString(key, value)) + ")");
       registry.add(key, new Provider(key, value));
       if (queues[key]) {
         _ref = queues[key];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           request = _ref[_i];
-          this.requestAsync.apply(this, [request.key].concat(__slice.call(request.args))).then(function(result) {
-            return request.resolve(result);
-          });
+          log("Deferred request: " + (toString.apply(null, [key].concat(__slice.call(request.args)))));
+          result = registry.process.apply(registry, [key, {
+            async: true
+          }].concat(__slice.call(request.args)));
+          log("Deferred request result: " + (toString(result)));
+          if (result === NOT_FOUND) {
+            throw "NOT FOUND: " + key;
+          } else if (isDeferred(result)) {
+            var req = request;
+
+            log(req);
+            result.then(function(v) {
+              log(toString(req));
+              log('VVVVVVVVVV');
+              return req.resolve(v);
+            });
+          } else {
+            request.resolve(result);
+          }
         }
         return delete queues[key];
       }
@@ -270,11 +280,12 @@
     FreeMart.requestAsync = function() {
       var args, key, request, result;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      log("FreeMart.requestAsync(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
       result = registry.process.apply(registry, [key, {
         async: true
       }].concat(__slice.call(args)));
       if (result === NO_PROVIDER) {
-        request = createDeferredRequest(key, args);
+        request = createDeferredRequest.apply(null, [key].concat(__slice.call(args)));
         queues[key] || (queues[key] = []);
         queues[key].push(request);
         return request;
