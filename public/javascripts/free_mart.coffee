@@ -1,6 +1,10 @@
 NOT_FOUND   = {}
 NO_PROVIDER = {}
 
+extend = (dest, src) ->
+  for own key, value of src
+    dest[key] = value
+
 toString = (obj...) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
   result.substring(1, result.length - 1)
@@ -77,8 +81,7 @@ class Registry
       if processed then NOT_FOUND else NO_PROVIDER
 
 class HashRegistry
-  for own key, value of InUse
-    @.prototype[key] = value
+  extend @.prototype, InUse
 
   constructor: ->
     @in_use_keys = []
@@ -93,8 +96,7 @@ class HashRegistry
     provider.process options, args...
 
 class FuzzyRegistry
-  for own key, value of InUse
-    @.prototype[key] = value
+  extend @.prototype, InUse
 
   constructor: (@fuzzy_key, @provider) ->
     @in_use_keys = []
@@ -226,8 +228,6 @@ class this.FreeMart
     result
 
   @clear: -> registry.clear()
-
-  @registry: registry
 
   @log: ->
 
