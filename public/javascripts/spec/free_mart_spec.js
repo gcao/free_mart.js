@@ -238,10 +238,24 @@
       result[0].should.equal('first');
       return result[1].should.equal('second');
     });
-    return it("deregister should work", function() {
+    it("deregister should work", function() {
       var func, provider;
       provider = FreeMart.register('key', 'value');
       FreeMart.deregister(provider);
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key"));
+    });
+    return it("self-destruction should work", function() {
+      var func;
+      FreeMart.log = function(msg) {
+        return console.log(msg);
+      };
+      FreeMart.register('key', function(options) {
+        return 'value';
+      });
+      FreeMart.request('key').should.equal('value');
       func = function() {
         return FreeMart.request('key');
       };
