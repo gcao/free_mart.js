@@ -284,10 +284,17 @@
     };
 
     FreeMart.request = function() {
-      var args, key;
+      var args, key, result;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       FreeMart.log("FreeMart.request(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
-      return registry.process.apply(registry, [key, {}].concat(__slice.call(args)));
+      result = registry.process.apply(registry, [key, {}].concat(__slice.call(args)));
+      if (result === NO_PROVIDER) {
+        throw "NO PROVIDER: " + key;
+      } else if (result === NOT_FOUND) {
+        throw "NOT FOUND: " + key;
+      } else {
+        return result;
+      }
     };
 
     createDeferredRequest = function() {

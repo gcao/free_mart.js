@@ -76,20 +76,6 @@ class Registry
 
       if processed then NOT_FOUND else NO_PROVIDER
 
-    #if options.all
-    #  result = []
-    #  for item in @
-    #    item_result = item.process key, options, args...
-    #    result.push item_result unless item_result == NOT_FOUND
-    #  result
-    #else
-    #  reverse_each do |item|
-    #    next if item.processing? key
-    #    result = item.process key, options, *args
-    #    return result unless result == NOT_FOUND
-    #  end
-    #  NOT_FOUND
-
 class HashRegistry
   for own key, value of InUse
     @.prototype[key] = value
@@ -150,8 +136,8 @@ class Provider
     else
       result
 
-# Registration are stored based on order
-# regexp => hash => regexp
+# Registrations are stored based on order
+# fuzzy => hash => fuzzy
 # Providers can be deregistered
 class this.FreeMart
   queues = {}
@@ -168,7 +154,7 @@ class this.FreeMart
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
         else if isDeferred result
-          # How do we ensure request in the callback is not changed
+          # Use a closure to ensure request in the callback is not changed
           # by the iterator to another
           func = (req) ->
             result.then (v) -> req.resolve(v)
@@ -176,29 +162,16 @@ class this.FreeMart
         else
           request.resolve(result)
       delete queues[key]
-    #if queues.hasOwnProperty key
-    #  queue = queues[key]
-    #  delete queues[key]
-    #  for item in queue
-    #    deferred = item.shift()
-    #    if typeof value is 'function'
-    #      result = value(item...)
-    #      if typeof result?.promise is 'function'
-    #        # Save a reference to deferred because it might be changed
-    #        deferred2 = deferred
-    #        result.done (newResult) ->
-    #          deferred2.resolve newResult
-    #      else
-    #        deferred.resolve result
-    #    else if typeof value?.promise is 'function'
-    #      value.done (result) ->
-    #        deferred.resolve result
-    #    else
-    #      deferred.resolve value
 
   @request: (key, args...) ->
     FreeMart.log "FreeMart.request(#{toString key, args...})"
-    registry.process key, {}, args...
+    result = registry.process key, {}, args...
+    if result is NO_PROVIDER
+      throw "NO PROVIDER: #{key}"
+    else if result is NOT_FOUND
+      throw "NOT FOUND: #{key}"
+    else
+      result
 
   createDeferredRequest = (key, args...) ->
     request = new Deferred()
@@ -218,29 +191,6 @@ class this.FreeMart
       throw "NOT FOUND: #{key}"
     else
       result
-
-    #if registry.hasOwnProperty key
-    #  value = registry[key]
-    #  if typeof value is 'function'
-    #    result = value(args...)
-    #    if typeof result?.promise is 'function'
-    #      result
-    #    else
-    #      new Deferred().resolve result
-    #  else if typeof value?.promise is 'function'
-    #    value
-    #  else
-    #    new Deferred().resolve value
-    #else
-    #  deferred = new Deferred()
-
-    #  args.unshift deferred
-    #  if queues.hasOwnProperty key
-    #    queues[key].push args
-    #  else
-    #    queues[key] = [args]
-
-    #  deferred
 
   @requestMulti: (keyAndArgs...) ->
     FreeMart.log "FreeMart.requestMulti(#{toString keyAndArgs})"
@@ -278,18 +228,6 @@ class this.FreeMart
   @clear: -> registry.clear()
 
   @registry: registry
-
-  #@processValue: (deferred, value, args...) ->
-  #  if typeof value is 'function'
-  #    result = value(args...)
-  #    if typeof result?.promise is 'function'
-  #      result
-  #    else
-  #      new Deferred().resolve result
-  #  else if typeof value?.promise is 'function'
-  #    value
-  #  else
-  #    new Deferred().resolve value
 
   @log: ->
 
