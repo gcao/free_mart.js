@@ -13,6 +13,10 @@
       FreeMart.register('key', 'value');
       return FreeMart.request('key').should.equal('value');
     });
+    it("register/req should work", function() {
+      FreeMart.register('key', 'value');
+      return FreeMart.req('key').should.equal('value');
+    });
     it("register/request should invoke function with arguments", function() {
       FreeMart.register('key', function(_, arg1, arg2) {
         return "value " + arg1 + " " + arg2;

@@ -11,6 +11,10 @@ describe FreeMart, ->
     FreeMart.register 'key', 'value'
     FreeMart.request('key').should.equal 'value'
 
+  it "register/req should work", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.req('key').should.equal 'value'
+
   it "register/request should invoke function with arguments", ->
     FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
     FreeMart.request('key', 'a', 'b').should.equal 'value a b'
