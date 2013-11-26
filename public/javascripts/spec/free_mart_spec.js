@@ -174,12 +174,24 @@
       FreeMart.register('key', 'second');
       return FreeMart.request('key').should.equal('second');
     });
-    return xit("nested request should work", function() {
+    it("nested request should work", function() {
       FreeMart.register('key', 'value');
       FreeMart.register('key', function() {
         return FreeMart.request('key');
       });
       return FreeMart.request('key').should.equal('value');
+    });
+    return it("nested requestAsync should work", function() {
+      var result;
+      FreeMart.register('key', 'value');
+      FreeMart.register('key', function() {
+        return FreeMart.requestAsync('key');
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      return result.should.equal('value');
     });
   });
 

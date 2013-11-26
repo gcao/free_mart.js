@@ -156,8 +156,17 @@ describe FreeMart, ->
     FreeMart.register 'key', 'second'
     FreeMart.request('key').should.equal 'second'
 
-  xit "nested request should work", ->
+  it "nested request should work", ->
     FreeMart.register 'key', 'value'
     FreeMart.register 'key', -> FreeMart.request('key')
     FreeMart.request('key').should.equal 'value'
+
+  it "nested requestAsync should work", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.register 'key', -> FreeMart.requestAsync('key')
+
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.should.equal 'value'
 

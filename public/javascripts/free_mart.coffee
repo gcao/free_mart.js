@@ -14,7 +14,7 @@ InUse =
   process: (key, options, args...) ->
     log "InUse.process(#{toString key, options, args...})"
     try
-      @in_use_keys << key
+      @in_use_keys.push key
       @process_ key, options, args...
     finally
       @in_use_keys.splice(@in_use_keys.indexOf(key), 1)

@@ -27,7 +27,7 @@
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
       log("InUse.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       try {
-        this.in_use_keys << key;
+        this.in_use_keys.push(key);
         return this.process_.apply(this, [key, options].concat(__slice.call(args)));
       } finally {
         this.in_use_keys.splice(this.in_use_keys.indexOf(key), 1);
