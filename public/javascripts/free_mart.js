@@ -266,10 +266,9 @@
 
   Provider = (function() {
 
-    function Provider(key, value) {
-      this.key = key;
+    function Provider(value) {
       this.value = value;
-      FreeMart.log("Provider.constructor(" + (toString(this.key, this.value)) + ")");
+      FreeMart.log("Provider.constructor(" + (toString(this.value)) + ")");
     }
 
     Provider.prototype.process = function() {
@@ -305,7 +304,7 @@
     FreeMart.register = function(key, value) {
       var func, provider, request, result, _i, _len, _ref;
       FreeMart.log("FreeMart.register(" + (toString(key, value)) + ")");
-      provider = new Provider(key, value);
+      provider = new Provider(value);
       registry.add(key, provider);
       if (queues[key]) {
         _ref = queues[key];

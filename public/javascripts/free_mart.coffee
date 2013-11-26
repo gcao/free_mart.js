@@ -137,8 +137,8 @@ class FuzzyRegistry
     @provider.process options, args...
 
 class Provider
-  constructor: (@key, @value) ->
-    FreeMart.log "Provider.constructor(#{toString @key, @value})"
+  constructor: (@value) ->
+    FreeMart.log "Provider.constructor(#{toString @value})"
 
   process: (args...) ->
     FreeMart.log "Provider.process(#{toString args...})"
@@ -166,7 +166,7 @@ class this.FreeMart
 
   @register: (key, value) ->
     FreeMart.log "FreeMart.register(#{toString key, value})"
-    provider = new Provider(key, value)
+    provider = new Provider(value)
     registry.add key, provider
     if queues[key]
       for request in queues[key]
