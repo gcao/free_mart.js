@@ -351,7 +351,7 @@
         }
         return _results;
       }).call(this);
-      return Deferred.when(requests);
+      return Deferred.when.apply(Deferred, requests);
     };
 
     FreeMart.requestAll = function() {
@@ -364,13 +364,20 @@
     };
 
     FreeMart.requestAllAsync = function() {
-      var args, key;
+      var args, key, requests, result;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       FreeMart.log("FreeMart.requestAllAsync(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
-      return registry.process.apply(registry, [key, {
+      result = new Deferred();
+      requests = registry.process.apply(registry, [key, {
         all: true,
         async: true
       }].concat(__slice.call(args)));
+      Deferred.when.apply(Deferred, requests).then(function() {
+        var results;
+        results = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return result.resolve(results);
+      });
+      return result;
     };
 
     FreeMart.clear = function() {

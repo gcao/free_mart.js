@@ -225,9 +225,6 @@
     });
     return it("requestAllAsync should work", function() {
       var result;
-      FreeMart.log = function(msg) {
-        return console.log(msg);
-      };
       FreeMart.register('key', 'first');
       FreeMart.register('key', 'second');
       result = null;

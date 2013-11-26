@@ -200,7 +200,6 @@ describe FreeMart, ->
     result[1].should.equal 'second'
 
   it "requestAllAsync should work", ->
-    FreeMart.log = (msg) -> console.log msg
     FreeMart.register 'key', 'first'
     FreeMart.register 'key', 'second'
 

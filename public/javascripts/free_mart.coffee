@@ -259,7 +259,7 @@ class this.FreeMart
         else
           @requestAsync keyAndArg
 
-    Deferred.when requests
+    Deferred.when requests...
 
   @requestAll: (key, args...) ->
     FreeMart.log "FreeMart.requestAll(#{toString key, args...})"
@@ -267,7 +267,13 @@ class this.FreeMart
 
   @requestAllAsync: (key, args...) ->
     FreeMart.log "FreeMart.requestAllAsync(#{toString key, args...})"
-    registry.process key, {all: true, async: true}, args...
+    result = new Deferred()
+
+    requests = registry.process key, {all: true, async: true}, args...
+    Deferred.when(requests...).then (results...) ->
+      result.resolve(results)
+
+    result
 
   @clear: -> registry.clear()
 
