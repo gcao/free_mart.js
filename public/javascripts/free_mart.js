@@ -342,7 +342,7 @@
       return _results;
     };
 
-    FreeMart.requestAsyncMulti = function() {
+    FreeMart.requestMultiAsync = function() {
       var keyAndArg, keyAndArgs, requests;
       keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       FreeMart.log("FreeMart.requestAsyncMulti(" + (toString(keyAndArgs)) + ")");
@@ -393,6 +393,18 @@
     };
 
     FreeMart.log = function() {};
+
+    FreeMart.req = FreeMart.request;
+
+    FreeMart.reqAsync = FreeMart.requestAsync;
+
+    FreeMart.reqMulti = FreeMart.requestMulti;
+
+    FreeMart.reqMultiAsync = FreeMart.requestMultiAsync;
+
+    FreeMart.reqAll = FreeMart.requestAll;
+
+    FreeMart.reqAllAsync = FreeMart.requestAllAsync;
 
     return FreeMart;
 

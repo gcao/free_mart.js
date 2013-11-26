@@ -202,7 +202,7 @@ class this.FreeMart
       else
         @request keyAndArg
 
-  @requestAsyncMulti: (keyAndArgs...) ->
+  @requestMultiAsync: (keyAndArgs...) ->
     FreeMart.log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
     requests =
       for keyAndArg in keyAndArgs
@@ -230,4 +230,12 @@ class this.FreeMart
   @clear: -> registry.clear()
 
   @log: ->
+
+  # aliases
+  @req          : @request
+  @reqAsync     : @requestAsync
+  @reqMulti     : @requestMulti
+  @reqMultiAsync: @requestMultiAsync
+  @reqAll       : @requestAll
+  @reqAllAsync  : @requestAllAsync
 

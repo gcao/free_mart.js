@@ -201,11 +201,11 @@
       result[0].should.equal('aa');
       return result[1].should.equal('bb');
     });
-    it("requestAsyncMulti should work", function() {
+    it("requestMultiAsync should work", function() {
       var result, result1, result2;
       FreeMart.register('a', 'aa');
       FreeMart.register('b', 'bb');
-      result = FreeMart.requestAsyncMulti('a', 'b');
+      result = FreeMart.requestMultiAsync('a', 'b');
       result1 = null;
       result2 = null;
       result.then(function(value1, value2) {
