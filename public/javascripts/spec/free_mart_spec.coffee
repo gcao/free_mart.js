@@ -3,7 +3,8 @@ chai.should()
 describe FreeMart, ->
   beforeEach ->
     FreeMart.clear()
-    window.log = ->
+    FreeMart.log = ->
+    #window.log = (msg) -> console.log msg
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -171,7 +172,6 @@ describe FreeMart, ->
     result.should.equal 'value'
 
   it "requestMulti should work", ->
-    #window.log = (msg) -> console.log msg
     FreeMart.register 'a', 'aa'
     FreeMart.register 'b', 'bb'
     result = FreeMart.requestMulti('a', 'b')
@@ -179,7 +179,6 @@ describe FreeMart, ->
     result[1].should.equal 'bb'
 
   it "requestAsyncMulti should work", ->
-    #window.log = (msg) -> console.log msg
     FreeMart.register 'a', 'aa'
     FreeMart.register 'b', 'bb'
 
@@ -191,4 +190,23 @@ describe FreeMart, ->
       result2 = value2
     result1.should.equal 'aa'
     result2.should.equal 'bb'
+
+  it "requestAll should work", ->
+    FreeMart.register 'key', 'first'
+    FreeMart.register 'key', 'second'
+
+    result = FreeMart.requestAll 'key'
+    result[0].should.equal 'first'
+    result[1].should.equal 'second'
+
+  it "requestAllAsync should work", ->
+    FreeMart.log = (msg) -> console.log msg
+    FreeMart.register 'key', 'first'
+    FreeMart.register 'key', 'second'
+
+    result = null
+    FreeMart.requestAllAsync('key').then (value) ->
+      result = value
+    result[0].should.equal 'first'
+    result[1].should.equal 'second'
 

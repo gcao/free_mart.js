@@ -7,7 +7,7 @@
   describe(FreeMart, function() {
     beforeEach(function() {
       FreeMart.clear();
-      return window.log = function() {};
+      return FreeMart.log = function() {};
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
@@ -201,7 +201,7 @@
       result[0].should.equal('aa');
       return result[1].should.equal('bb');
     });
-    return it("requestAsyncMulti should work", function() {
+    it("requestAsyncMulti should work", function() {
       var result, result1, result2;
       FreeMart.register('a', 'aa');
       FreeMart.register('b', 'bb');
@@ -214,6 +214,28 @@
       });
       result1.should.equal('aa');
       return result2.should.equal('bb');
+    });
+    it("requestAll should work", function() {
+      var result;
+      FreeMart.register('key', 'first');
+      FreeMart.register('key', 'second');
+      result = FreeMart.requestAll('key');
+      result[0].should.equal('first');
+      return result[1].should.equal('second');
+    });
+    return it("requestAllAsync should work", function() {
+      var result;
+      FreeMart.log = function(msg) {
+        return console.log(msg);
+      };
+      FreeMart.register('key', 'first');
+      FreeMart.register('key', 'second');
+      result = null;
+      FreeMart.requestAllAsync('key').then(function(value) {
+        return result = value;
+      });
+      result[0].should.equal('first');
+      return result[1].should.equal('second');
     });
   });
 

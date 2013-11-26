@@ -8,8 +8,6 @@
 
   NO_PROVIDER = {};
 
-  this.log = function() {};
-
   toString = function() {
     var obj, result;
     obj = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -25,7 +23,7 @@
     process: function() {
       var args, key, options;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("InUse.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
+      FreeMart.log("InUse.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       try {
         this.in_use_keys.push(key);
         return this.process_.apply(this, [key, options].concat(__slice.call(args)));
@@ -77,31 +75,56 @@
     };
 
     Registry.prototype.process = function() {
-      var args, i, item, key, options, processed, result, _i, _ref;
+      var args, i, item, key, options, processed, result, value, _i, _j, _len, _ref, _ref1;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("Registry.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
+      FreeMart.log("Registry.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       if (this.storage.length === 0) {
         return NO_PROVIDER;
       }
-      processed = false;
-      for (i = _i = _ref = this.storage.length - 1; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
-        item = this.storage[i];
-        if (!item.accept(key)) {
-          continue;
+      if (options.all) {
+        result = [];
+        processed = false;
+        _ref = this.storage;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          if (!item.accept(key)) {
+            continue;
+          }
+          if (item.processing(key)) {
+            continue;
+          }
+          processed = true;
+          value = item.process.apply(item, [key, options].concat(__slice.call(args)));
+          if (value !== NOT_FOUND) {
+            result.push(value);
+          }
         }
-        if (item.processing(key)) {
-          continue;
-        }
-        processed = true;
-        result = item.process.apply(item, [key, options].concat(__slice.call(args)));
-        if (result !== NOT_FOUND) {
+        if (processed) {
           return result;
+        } else {
+          return NO_PROVIDER;
         }
-      }
-      if (processed) {
-        return NOT_FOUND;
       } else {
-        return NO_PROVIDER;
+        processed = false;
+        for (i = _j = _ref1 = this.storage.length - 1; _ref1 <= 0 ? _j <= 0 : _j >= 0; i = _ref1 <= 0 ? ++_j : --_j) {
+          item = this.storage[i];
+          if (!item.accept(key)) {
+            continue;
+          }
+          if (item.processing(key)) {
+            continue;
+          }
+          processed = true;
+          result = item.process.apply(item, [key, options].concat(__slice.call(args)));
+          if (result !== NOT_FOUND) {
+            return result;
+          }
+        }
+        if (processed) {
+          return NOT_FOUND;
+        } else {
+          return NO_PROVIDER;
+        }
       }
     };
 
@@ -129,7 +152,7 @@
     HashRegistry.prototype.process_ = function() {
       var args, key, options, provider;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("HashRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
+      FreeMart.log("HashRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       provider = this[key];
       if (!provider) {
         return NO_PROVIDER;
@@ -158,7 +181,7 @@
 
     FuzzyRegistry.prototype.accept = function(key) {
       var item, _i, _len, _ref;
-      log("FuzzyRegistry.accept(" + key + ")");
+      FreeMart.log("FuzzyRegistry.accept(" + key + ")");
       if (this.fuzzy_key instanceof RegExp) {
         return key.match(this.fuzzy_key);
       } else if (this.fuzzy_key instanceof Array) {
@@ -181,7 +204,7 @@
     FuzzyRegistry.prototype.process_ = function() {
       var args, key, options, _ref;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      log("FuzzyRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
+      FreeMart.log("FuzzyRegistry.process_(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       if (!this.accept(key)) {
         return NO_PROVIDER;
       }
@@ -197,13 +220,13 @@
     function Provider(key, value) {
       this.key = key;
       this.value = value;
-      log("Provider.constructor(" + (toString(this.key, this.value)) + ")");
+      FreeMart.log("Provider.constructor(" + (toString(this.key, this.value)) + ")");
     }
 
     Provider.prototype.process = function() {
       var args, options, result;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      log("Provider.process(" + (toString.apply(null, args)) + ")");
+      FreeMart.log("Provider.process(" + (toString.apply(null, args)) + ")");
       result = typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
       options = args[0];
       if (options != null ? options.async : void 0) {
@@ -232,17 +255,17 @@
 
     FreeMart.register = function(key, value) {
       var func, request, result, _i, _len, _ref;
-      log("FreeMart.register(" + (toString(key, value)) + ")");
+      FreeMart.log("FreeMart.register(" + (toString(key, value)) + ")");
       registry.add(key, new Provider(key, value));
       if (queues[key]) {
         _ref = queues[key];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           request = _ref[_i];
-          log("Deferred request: " + (toString.apply(null, [key].concat(__slice.call(request.args)))));
+          FreeMart.log("Deferred request: " + (toString.apply(null, [key].concat(__slice.call(request.args)))));
           result = registry.process.apply(registry, [key, {
             async: true
           }].concat(__slice.call(request.args)));
-          log("Deferred request result: " + (toString(result)));
+          FreeMart.log("Deferred request result: " + (toString(result)));
           if (result === NOT_FOUND) {
             throw "NOT FOUND: " + key;
           } else if (isDeferred(result)) {
@@ -263,7 +286,7 @@
     FreeMart.request = function() {
       var args, key;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      log("FreeMart.request(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
+      FreeMart.log("FreeMart.request(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
       return registry.process.apply(registry, [key, {}].concat(__slice.call(args)));
     };
 
@@ -279,7 +302,7 @@
     FreeMart.requestAsync = function() {
       var args, key, request, result;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      log("FreeMart.requestAsync(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
+      FreeMart.log("FreeMart.requestAsync(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
       result = registry.process.apply(registry, [key, {
         async: true
       }].concat(__slice.call(args)));
@@ -298,7 +321,7 @@
     FreeMart.requestMulti = function() {
       var keyAndArg, keyAndArgs, _i, _len, _results;
       keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      log("FreeMart.requestMulti(" + (toString(keyAndArgs)) + ")");
+      FreeMart.log("FreeMart.requestMulti(" + (toString(keyAndArgs)) + ")");
       _results = [];
       for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
         keyAndArg = keyAndArgs[_i];
@@ -314,7 +337,7 @@
     FreeMart.requestAsyncMulti = function() {
       var keyAndArg, keyAndArgs, requests;
       keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      log("FreeMart.requestAsyncMulti(" + (toString(keyAndArgs)) + ")");
+      FreeMart.log("FreeMart.requestAsyncMulti(" + (toString(keyAndArgs)) + ")");
       requests = (function() {
         var _i, _len, _results;
         _results = [];
@@ -331,11 +354,32 @@
       return Deferred.when(requests);
     };
 
+    FreeMart.requestAll = function() {
+      var args, key;
+      key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      FreeMart.log("FreeMart.requestAll(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
+      return registry.process.apply(registry, [key, {
+        all: true
+      }].concat(__slice.call(args)));
+    };
+
+    FreeMart.requestAllAsync = function() {
+      var args, key;
+      key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      FreeMart.log("FreeMart.requestAllAsync(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
+      return registry.process.apply(registry, [key, {
+        all: true,
+        async: true
+      }].concat(__slice.call(args)));
+    };
+
     FreeMart.clear = function() {
       return registry.clear();
     };
 
     FreeMart.registry = registry;
+
+    FreeMart.log = function() {};
 
     return FreeMart;
 

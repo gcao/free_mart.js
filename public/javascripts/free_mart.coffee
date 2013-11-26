@@ -1,9 +1,6 @@
 NOT_FOUND   = {}
 NO_PROVIDER = {}
 
-#this.log = (msg) -> console.log msg
-this.log = ->
-
 toString = (obj...) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
   result.substring(1, result.length - 1)
@@ -12,7 +9,7 @@ isDeferred = (o) -> typeof o?.promise is 'function'
 
 InUse =
   process: (key, options, args...) ->
-    log "InUse.process(#{toString key, options, args...})"
+    FreeMart.log "InUse.process(#{toString key, options, args...})"
     try
       @in_use_keys.push key
       @process_ key, options, args...
@@ -48,22 +45,36 @@ class Registry
       if item.accept key then return true
 
   process: (key, options, args...) ->
-    log "Registry.process(#{toString key, options, args...})"
+    FreeMart.log "Registry.process(#{toString key, options, args...})"
 
     if @storage.length is 0
       return NO_PROVIDER
 
-    processed = false
-    for i in [@storage.length-1..0]
-      item = @storage[i]
-      continue unless item.accept key
-      continue if item.processing key
+    if options.all
+      result = []
+      processed = false
+      for item in @storage
+        continue unless item.accept key
+        continue if item.processing key
 
-      processed = true
-      result = item.process key, options, args...
-      return result unless result is NOT_FOUND
+        processed = true
+        value = item.process key, options, args...
+        result.push value unless value is NOT_FOUND
 
-    if processed then NOT_FOUND else NO_PROVIDER
+      if processed then result else NO_PROVIDER
+
+    else
+      processed = false
+      for i in [@storage.length-1..0]
+        item = @storage[i]
+        continue unless item.accept key
+        continue if item.processing key
+
+        processed = true
+        result = item.process key, options, args...
+        return result unless result is NOT_FOUND
+
+      if processed then NOT_FOUND else NO_PROVIDER
 
     #if options.all
     #  result = []
@@ -90,7 +101,7 @@ class HashRegistry
     @[key]
 
   process_: (key, options, args...) ->
-    log "HashRegistry.process_(#{toString key, options, args...})"
+    FreeMart.log "HashRegistry.process_(#{toString key, options, args...})"
     provider = @[key]
     return NO_PROVIDER unless provider
     provider.process options, args...
@@ -103,7 +114,7 @@ class FuzzyRegistry
     @in_use_keys = []
 
   accept: (key) ->
-    log "FuzzyRegistry.accept(#{key})"
+    FreeMart.log "FuzzyRegistry.accept(#{key})"
     if @fuzzy_key instanceof RegExp
       key.match @fuzzy_key
     else if @fuzzy_key instanceof Array
@@ -114,16 +125,16 @@ class FuzzyRegistry
           return true if key.match(item)
 
   process_: (key, options, args...) ->
-    log "FuzzyRegistry.process_(#{toString key, options, args...})"
+    FreeMart.log "FuzzyRegistry.process_(#{toString key, options, args...})"
     return NO_PROVIDER unless @accept key
     @provider.process options, args...
 
 class Provider
   constructor: (@key, @value) ->
-    log "Provider.constructor(#{toString @key, @value})"
+    FreeMart.log "Provider.constructor(#{toString @key, @value})"
 
   process: (args...) ->
-    log "Provider.process(#{toString args...})"
+    FreeMart.log "Provider.process(#{toString args...})"
     result =
       if typeof @value is 'function'
         @value args...
@@ -147,13 +158,13 @@ class this.FreeMart
   registry = new Registry()
 
   @register: (key, value) ->
-    log "FreeMart.register(#{toString key, value})"
+    FreeMart.log "FreeMart.register(#{toString key, value})"
     registry.add key, new Provider(key, value)
     if queues[key]
       for request in queues[key]
-        log "Deferred request: #{toString key, request.args...}"
+        FreeMart.log "Deferred request: #{toString key, request.args...}"
         result = registry.process key, {async: true}, request.args...
-        log "Deferred request result: #{toString result}"
+        FreeMart.log "Deferred request result: #{toString result}"
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
         else if isDeferred result
@@ -186,7 +197,7 @@ class this.FreeMart
     #      deferred.resolve value
 
   @request: (key, args...) ->
-    log "FreeMart.request(#{toString key, args...})"
+    FreeMart.log "FreeMart.request(#{toString key, args...})"
     registry.process key, {}, args...
 
   createDeferredRequest = (key, args...) ->
@@ -196,7 +207,7 @@ class this.FreeMart
     request
 
   @requestAsync: (key, args...) ->
-    log "FreeMart.requestAsync(#{toString key, args...})"
+    FreeMart.log "FreeMart.requestAsync(#{toString key, args...})"
     result = registry.process key, {async: true}, args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
@@ -232,7 +243,7 @@ class this.FreeMart
     #  deferred
 
   @requestMulti: (keyAndArgs...) ->
-    log "FreeMart.requestMulti(#{toString keyAndArgs})"
+    FreeMart.log "FreeMart.requestMulti(#{toString keyAndArgs})"
     for keyAndArg in keyAndArgs
       if typeof keyAndArg is 'object' and keyAndArg.length
         @request keyAndArg...
@@ -240,7 +251,7 @@ class this.FreeMart
         @request keyAndArg
 
   @requestAsyncMulti: (keyAndArgs...) ->
-    log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
+    FreeMart.log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
     requests =
       for keyAndArg in keyAndArgs
         if typeof keyAndArg is 'object' and keyAndArg.length
@@ -249,6 +260,14 @@ class this.FreeMart
           @requestAsync keyAndArg
 
     Deferred.when requests
+
+  @requestAll: (key, args...) ->
+    FreeMart.log "FreeMart.requestAll(#{toString key, args...})"
+    registry.process key, {all: true}, args...
+
+  @requestAllAsync: (key, args...) ->
+    FreeMart.log "FreeMart.requestAllAsync(#{toString key, args...})"
+    registry.process key, {all: true, async: true}, args...
 
   @clear: -> registry.clear()
 
@@ -265,4 +284,6 @@ class this.FreeMart
   #    value
   #  else
   #    new Deferred().resolve value
+
+  @log: ->
 
