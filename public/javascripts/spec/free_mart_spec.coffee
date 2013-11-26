@@ -221,7 +221,7 @@ describe FreeMart, ->
     expect(func).toThrow(new Error("NO PROVIDER: key"))
 
   it "self-destruction should work", ->
-    provider = FreeMart.register 'key', (options) ->
+    provider = FreeMart.register 'key', ->
       provider.count -= 1
       if provider.count <= 0
         # Self destroy

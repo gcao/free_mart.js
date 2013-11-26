@@ -249,7 +249,7 @@
     });
     return it("self-destruction should work", function() {
       var func, provider;
-      provider = FreeMart.register('key', function(options) {
+      provider = FreeMart.register('key', function() {
         provider.count -= 1;
         if (provider.count <= 0) {
           FreeMart.deregister(provider);
