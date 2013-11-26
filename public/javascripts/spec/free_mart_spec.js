@@ -181,7 +181,7 @@
       });
       return FreeMart.request('key').should.equal('value');
     });
-    return it("nested requestAsync should work", function() {
+    it("nested requestAsync should work", function() {
       var result;
       FreeMart.register('key', 'value');
       FreeMart.register('key', function() {
@@ -192,6 +192,28 @@
         return result = value;
       });
       return result.should.equal('value');
+    });
+    it("requestMulti should work", function() {
+      var result;
+      FreeMart.register('a', 'aa');
+      FreeMart.register('b', 'bb');
+      result = FreeMart.requestMulti('a', 'b');
+      result[0].should.equal('aa');
+      return result[1].should.equal('bb');
+    });
+    return it("requestAsyncMulti should work", function() {
+      var result, result1, result2;
+      FreeMart.register('a', 'aa');
+      FreeMart.register('b', 'bb');
+      result = FreeMart.requestAsyncMulti('a', 'b');
+      result1 = null;
+      result2 = null;
+      result.then(function(value1, value2) {
+        result1 = value1;
+        return result2 = value2;
+      });
+      result1.should.equal('aa');
+      return result2.should.equal('bb');
     });
   });
 

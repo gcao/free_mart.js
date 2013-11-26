@@ -186,6 +186,7 @@ class this.FreeMart
     #      deferred.resolve value
 
   @request: (key, args...) ->
+    log "FreeMart.request(#{toString key, args...})"
     registry.process key, {}, args...
 
   createDeferredRequest = (key, args...) ->
@@ -229,6 +230,25 @@ class this.FreeMart
     #    queues[key] = [args]
 
     #  deferred
+
+  @requestMulti: (keyAndArgs...) ->
+    log "FreeMart.requestMulti(#{toString keyAndArgs})"
+    for keyAndArg in keyAndArgs
+      if typeof keyAndArg is 'object' and keyAndArg.length
+        @request keyAndArg...
+      else
+        @request keyAndArg
+
+  @requestAsyncMulti: (keyAndArgs...) ->
+    log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
+    requests =
+      for keyAndArg in keyAndArgs
+        if typeof keyAndArg is 'object' and keyAndArg.length
+          @requestAsync keyAndArg...
+        else
+          @requestAsync keyAndArg
+
+    Deferred.when requests
 
   @clear: -> registry.clear()
 

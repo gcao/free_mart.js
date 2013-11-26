@@ -263,6 +263,7 @@
     FreeMart.request = function() {
       var args, key;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      log("FreeMart.request(" + (toString.apply(null, [key].concat(__slice.call(args)))) + ")");
       return registry.process.apply(registry, [key, {}].concat(__slice.call(args)));
     };
 
@@ -292,6 +293,42 @@
       } else {
         return result;
       }
+    };
+
+    FreeMart.requestMulti = function() {
+      var keyAndArg, keyAndArgs, _i, _len, _results;
+      keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      log("FreeMart.requestMulti(" + (toString(keyAndArgs)) + ")");
+      _results = [];
+      for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
+        keyAndArg = keyAndArgs[_i];
+        if (typeof keyAndArg === 'object' && keyAndArg.length) {
+          _results.push(this.request.apply(this, keyAndArg));
+        } else {
+          _results.push(this.request(keyAndArg));
+        }
+      }
+      return _results;
+    };
+
+    FreeMart.requestAsyncMulti = function() {
+      var keyAndArg, keyAndArgs, requests;
+      keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      log("FreeMart.requestAsyncMulti(" + (toString(keyAndArgs)) + ")");
+      requests = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
+          keyAndArg = keyAndArgs[_i];
+          if (typeof keyAndArg === 'object' && keyAndArg.length) {
+            _results.push(this.requestAsync.apply(this, keyAndArg));
+          } else {
+            _results.push(this.requestAsync(keyAndArg));
+          }
+        }
+        return _results;
+      }).call(this);
+      return Deferred.when(requests);
     };
 
     FreeMart.clear = function() {

@@ -170,3 +170,25 @@ describe FreeMart, ->
       result = value
     result.should.equal 'value'
 
+  it "requestMulti should work", ->
+    #window.log = (msg) -> console.log msg
+    FreeMart.register 'a', 'aa'
+    FreeMart.register 'b', 'bb'
+    result = FreeMart.requestMulti('a', 'b')
+    result[0].should.equal 'aa'
+    result[1].should.equal 'bb'
+
+  it "requestAsyncMulti should work", ->
+    #window.log = (msg) -> console.log msg
+    FreeMart.register 'a', 'aa'
+    FreeMart.register 'b', 'bb'
+
+    result = FreeMart.requestAsyncMulti('a', 'b')
+    result1 = null
+    result2 = null
+    result.then (value1, value2) ->
+      result1 = value1
+      result2 = value2
+    result1.should.equal 'aa'
+    result2.should.equal 'bb'
+
