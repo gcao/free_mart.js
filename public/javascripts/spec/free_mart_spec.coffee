@@ -12,6 +12,17 @@ describe FreeMart, ->
     FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
     FreeMart.request('key', 'a', 'b').should.equal 'value a b'
 
+  it "register/request should work with promises", ->
+    deferred = new Deferred()
+    FreeMart.register 'key', deferred
+
+    result = null
+    FreeMart.request('key').then (value) ->
+      result = value
+
+    deferred.resolve('value')
+    result.should.equal 'value'
+
   it "requestAsync should work with simple value", ->
     FreeMart.register 'key', 'value'
     result = null
@@ -20,11 +31,11 @@ describe FreeMart, ->
     result.should.equal 'value'
 
   it "requestAsync should work with functions", ->
-    FreeMart.register 'key', -> 'value'
+    FreeMart.register 'key', (_, args...) -> "value #{args.join(' ')}"
     result = null
-    FreeMart.requestAsync('key').then (value) ->
+    FreeMart.requestAsync('key', 'a', 'b').then (value) ->
       result = value
-    result.should.equal 'value'
+    result.should.equal 'value a b'
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
@@ -86,58 +97,58 @@ describe FreeMart, ->
     resultB.should.equal 'b'
     resultC.should.equal 'c'
 
-  #it "multiple requestAsync in Deferred.when should work", ->
-  #  FreeMart.register 'a', 'aa'
-  #  FreeMart.register 'b', 'bb'
+  it "multiple requestAsync in Deferred.when should work", ->
+    FreeMart.register 'a', 'aa'
+    FreeMart.register 'b', 'bb'
 
-  #  resultA = null
-  #  resultB = null
-  #  Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
-  #    .then (valueA, valueB) ->
-  #      resultA = valueA
-  #      resultB = valueB
+    resultA = null
+    resultB = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
+      .then (valueA, valueB) ->
+        resultA = valueA
+        resultB = valueB
 
-  #  resultA.should.equal 'aa'
-  #  resultB.should.equal 'bb'
+    resultA.should.equal 'aa'
+    resultB.should.equal 'bb'
 
-  #it "multiple requestAsync in Deferred.when should work with deferred objects", ->
-  #  deferredA = new Deferred(0)
-  #  FreeMart.register 'a', deferredA
-  #  FreeMart.register 'b', 'bb'
+  it "multiple requestAsync in Deferred.when should work with deferred objects", ->
+    deferredA = new Deferred(0)
+    FreeMart.register 'a', deferredA
+    FreeMart.register 'b', 'bb'
 
-  #  resultA = null
-  #  resultB = null
-  #  Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
-  #    .then (valueA, valueB) ->
-  #      resultA = valueA
-  #      resultB = valueB
+    resultA = null
+    resultB = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b'))
+      .then (valueA, valueB) ->
+        resultA = valueA
+        resultB = valueB
 
-  #  deferredA.resolve('aa')
+    deferredA.resolve('aa')
 
-  #  resultA.should.equal 'aa'
-  #  resultB.should.equal 'bb'
+    resultA.should.equal 'aa'
+    resultB.should.equal 'bb'
 
-  ##it "multiple requestAsync in Deferred.when should work if providers are registered later", ->
-  ##  resultA = null
-  ##  resultB = null
-  ##  Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b', 'bb'))
-  ##    .then (valueA, valueB) ->
-  ##      resultA = valueA
-  ##      resultB = valueB
+  it "multiple requestAsync in Deferred.when should work if providers are registered later", ->
+    resultA = null
+    resultB = null
+    Deferred.when(FreeMart.requestAsync('a'), FreeMart.requestAsync('b', 'bb'))
+      .then (valueA, valueB) ->
+        resultA = valueA
+        resultB = valueB
 
-  ##  deferredA = new Deferred(0)
-  ##  FreeMart.register 'a', deferredA
-  ##  FreeMart.register 'b', (arg) -> arg
+    deferredA = new Deferred(0)
+    FreeMart.register 'a', deferredA
+    FreeMart.register 'b', (_, arg) -> arg
 
-  ##  deferredA.resolve('aa')
+    deferredA.resolve('aa')
 
-  ##  resultA.should.equal 'aa'
-  ##  resultB.should.equal 'bb'
+    resultA.should.equal 'aa'
+    resultB.should.equal 'bb'
 
-  #xit "register can take regular expression as key", ->
+  xit "register can take regular expression as key", ->
 
-  #xit "order of registration should be kept", ->
-  #  FreeMart.register /a.*/, -> 'first'
-  #  FreeMart.register /ab.*/, -> 'second'
-  #  FreeMart.request('abc').should.equal 'first'
+  xit "order of registration should be kept", ->
+    FreeMart.register /a.*/, -> 'first'
+    FreeMart.register /ab.*/, -> 'second'
+    FreeMart.request('abc').should.equal 'first'
 
