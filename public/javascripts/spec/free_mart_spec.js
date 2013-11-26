@@ -248,13 +248,16 @@
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
     return it("self-destruction should work", function() {
-      var func;
-      FreeMart.log = function(msg) {
-        return console.log(msg);
-      };
-      FreeMart.register('key', function(options) {
+      var func, provider;
+      provider = FreeMart.register('key', function(options) {
+        provider.count -= 1;
+        if (provider.count <= 0) {
+          FreeMart.deregister(provider);
+        }
         return 'value';
       });
+      provider.count = 2;
+      FreeMart.request('key').should.equal('value');
       FreeMart.request('key').should.equal('value');
       func = function() {
         return FreeMart.request('key');
