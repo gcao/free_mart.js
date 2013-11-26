@@ -6,7 +6,8 @@
 
   describe(FreeMart, function() {
     beforeEach(function() {
-      return FreeMart.clear();
+      FreeMart.clear();
+      return window.log = function() {};
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
@@ -161,15 +162,24 @@
       resultA.should.equal('aa');
       return resultB.should.equal('bb');
     });
-    xit("register can take regular expression as key", function() {});
-    return xit("order of registration should be kept", function() {
-      FreeMart.register(/a.*/, function() {
-        return 'first';
+    it("register can take regular expression as key", function() {
+      FreeMart.register(/key/, function() {
+        return 'value';
       });
-      FreeMart.register(/ab.*/, function() {
-        return 'second';
+      FreeMart.request('key').should.equal('value');
+      return FreeMart.request('key1').should.equal('value');
+    });
+    it("order of registration should be kept", function() {
+      FreeMart.register('key', 'first');
+      FreeMart.register('key', 'second');
+      return FreeMart.request('key').should.equal('second');
+    });
+    return xit("nested request should work", function() {
+      FreeMart.register('key', 'value');
+      FreeMart.register('key', function() {
+        return FreeMart.request('key');
       });
-      return FreeMart.request('abc').should.equal('first');
+      return FreeMart.request('key').should.equal('value');
     });
   });
 

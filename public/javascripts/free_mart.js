@@ -25,6 +25,7 @@
     process: function() {
       var args, key, options;
       key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      log("InUse.process(" + (toString.apply(null, [key, options].concat(__slice.call(args)))) + ")");
       try {
         this.in_use_keys << key;
         return this.process_.apply(this, [key, options].concat(__slice.call(args)));
@@ -84,7 +85,7 @@
       }
       processed = false;
       for (i = _i = _ref = this.storage.length - 1; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
-        item = this.storage[0];
+        item = this.storage[i];
         if (!item.accept(key)) {
           continue;
         }
@@ -157,8 +158,9 @@
 
     FuzzyRegistry.prototype.accept = function(key) {
       var item, _i, _len, _ref;
+      log("FuzzyRegistry.accept(" + key + ")");
       if (this.fuzzy_key instanceof RegExp) {
-        return this.fuzzy_key.match(key);
+        return key.match(this.fuzzy_key);
       } else if (this.fuzzy_key instanceof Array) {
         _ref = this.fuzzy_key;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {

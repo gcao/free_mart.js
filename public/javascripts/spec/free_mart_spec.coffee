@@ -3,6 +3,7 @@ chai.should()
 describe FreeMart, ->
   beforeEach ->
     FreeMart.clear()
+    window.log = ->
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -145,10 +146,18 @@ describe FreeMart, ->
     resultA.should.equal 'aa'
     resultB.should.equal 'bb'
 
-  xit "register can take regular expression as key", ->
+  it "register can take regular expression as key", ->
+    FreeMart.register /key/, -> 'value'
+    FreeMart.request('key').should.equal 'value'
+    FreeMart.request('key1').should.equal 'value'
 
-  xit "order of registration should be kept", ->
-    FreeMart.register /a.*/, -> 'first'
-    FreeMart.register /ab.*/, -> 'second'
-    FreeMart.request('abc').should.equal 'first'
+  it "order of registration should be kept", ->
+    FreeMart.register 'key', 'first'
+    FreeMart.register 'key', 'second'
+    FreeMart.request('key').should.equal 'second'
+
+  xit "nested request should work", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.register 'key', -> FreeMart.request('key')
+    FreeMart.request('key').should.equal 'value'
 

@@ -12,6 +12,7 @@ isDeferred = (o) -> typeof o?.promise is 'function'
 
 InUse =
   process: (key, options, args...) ->
+    log "InUse.process(#{toString key, options, args...})"
     try
       @in_use_keys << key
       @process_ key, options, args...
@@ -54,7 +55,7 @@ class Registry
 
     processed = false
     for i in [@storage.length-1..0]
-      item = @storage[0]
+      item = @storage[i]
       continue unless item.accept key
       continue if item.processing key
 
@@ -102,8 +103,9 @@ class FuzzyRegistry
     @in_use_keys = []
 
   accept: (key) ->
+    log "FuzzyRegistry.accept(#{key})"
     if @fuzzy_key instanceof RegExp
-      @fuzzy_key.match(key)
+      key.match @fuzzy_key
     else if @fuzzy_key instanceof Array
       for item in @fuzzy_key
         if item instanceof String
