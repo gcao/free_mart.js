@@ -8,9 +8,7 @@
 
   NO_PROVIDER = {};
 
-  this.log = function(msg) {
-    return console.log(msg);
-  };
+  this.log = function() {};
 
   toString = function() {
     var obj, result;
@@ -231,7 +229,7 @@
     registry = new Registry();
 
     FreeMart.register = function(key, value) {
-      var request, result, _i, _len, _ref;
+      var func, request, result, _i, _len, _ref;
       log("FreeMart.register(" + (toString(key, value)) + ")");
       registry.add(key, new Provider(key, value));
       if (queues[key]) {
@@ -246,14 +244,12 @@
           if (result === NOT_FOUND) {
             throw "NOT FOUND: " + key;
           } else if (isDeferred(result)) {
-            var req = request;
-
-            log(req);
-            result.then(function(v) {
-              log(toString(req));
-              log('VVVVVVVVVV');
-              return req.resolve(v);
-            });
+            func = function(req) {
+              return result.then(function(v) {
+                return req.resolve(v);
+              });
+            };
+            func(request);
           } else {
             request.resolve(result);
           }

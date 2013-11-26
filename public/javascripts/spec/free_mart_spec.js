@@ -5,8 +5,7 @@
 
   describe(FreeMart, function() {
     beforeEach(function() {
-      FreeMart.clear();
-      return window.log = function() {};
+      return FreeMart.clear();
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
@@ -81,15 +80,10 @@
       return result.should.equal('value');
     });
     return it("multiple requestAsync should work if provider is registered later", function() {
-      var deferredA, requestA, resultA, resultB;
-      window.log = function(msg) {
-        return console.log(msg);
-      };
+      var deferredA, requestA, resultA, resultB, resultC;
       resultA = null;
       deferredA = new Deferred();
       requestA = FreeMart.requestAsync('key', deferredA).then(function(value) {
-        console.log('=========');
-        console.log(value);
         return resultA = value;
       });
       resultB = null;
@@ -97,14 +91,16 @@
         return resultB = value;
       });
       FreeMart.register('key', function(_, arg) {
-        console.log('---------');
-        console.log(JSON.stringify(_));
-        console.log(arg.promise);
         return arg;
+      });
+      resultC = null;
+      FreeMart.requestAsync('key', 'c').then(function(value) {
+        return resultC = value;
       });
       deferredA.resolve('a');
       resultA.should.equal('a');
-      return resultB.should.equal('b');
+      resultB.should.equal('b');
+      return resultC.should.equal('c');
     });
   });
 

@@ -3,7 +3,6 @@ chai.should()
 describe FreeMart, ->
   beforeEach ->
     FreeMart.clear()
-    window.log = ->
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -66,12 +65,9 @@ describe FreeMart, ->
     result.should.equal 'value'
 
   it "multiple requestAsync should work if provider is registered later", ->
-    window.log = (msg) -> console.log msg
     resultA = null
     deferredA = new Deferred()
     requestA = FreeMart.requestAsync('key', deferredA).then (value) ->
-      console.log '========='
-      console.log value
       resultA = value
 
     resultB = null
@@ -79,19 +75,16 @@ describe FreeMart, ->
       resultB = value
 
     FreeMart.register 'key', (_, arg) ->
-      console.log '---------'
-      console.log JSON.stringify _
-      console.log arg.promise
       arg
 
-    #resultC = null
-    #FreeMart.requestAsync('key', 'c').then (value) ->
-    #  resultC = value
+    resultC = null
+    FreeMart.requestAsync('key', 'c').then (value) ->
+      resultC = value
 
     deferredA.resolve 'a'
     resultA.should.equal 'a'
     resultB.should.equal 'b'
-    #resultC.should.equal 'c'
+    resultC.should.equal 'c'
 
   #it "multiple requestAsync in Deferred.when should work", ->
   #  FreeMart.register 'a', 'aa'

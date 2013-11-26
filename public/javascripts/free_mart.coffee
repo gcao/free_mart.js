@@ -1,7 +1,8 @@
 NOT_FOUND   = {}
 NO_PROVIDER = {}
 
-this.log = (msg) -> console.log msg
+#this.log = (msg) -> console.log msg
+this.log = ->
 
 toString = (obj...) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
@@ -156,12 +157,9 @@ class this.FreeMart
         else if isDeferred result
           # How do we ensure request in the callback is not changed
           # by the iterator to another
-          `var req = request`
-          log req
-          result.then (v) ->
-            log toString req
-            log 'VVVVVVVVVV'
-            req.resolve(v)
+          func = (req) ->
+            result.then (v) -> req.resolve(v)
+          func(request)
         else
           request.resolve(result)
       delete queues[key]
@@ -245,3 +243,4 @@ class this.FreeMart
   #    value
   #  else
   #    new Deferred().resolve value
+
