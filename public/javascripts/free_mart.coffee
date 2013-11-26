@@ -1,6 +1,8 @@
 NOT_FOUND   = {}
 NO_PROVIDER = {}
 
+isDeferred = (o) -> typeof o?.promise is 'function'
+
 extend = (dest, src) ->
   for own key, value of src
     dest[key] = value
@@ -8,8 +10,6 @@ extend = (dest, src) ->
 toString = (obj...) ->
   result = JSON.stringify(obj).replace(/"/g, "'")
   result.substring(1, result.length - 1)
-
-isDeferred = (o) -> typeof o?.promise is 'function'
 
 InUse =
   process: (key, options, args...) ->
@@ -43,6 +43,15 @@ class Registry
       @storage.push child_registry
 
     provider
+
+  removeProvider: (provider) ->
+    for item, i in @storage
+      if item instanceof HashRegistry
+        item.removeProvider provider
+        if item.isEmpty
+          @storage.splice i, 1
+      else if item.provider is provider
+        @storage.splice(i, 1)
 
   accept: (key) ->
     for item in @storage
@@ -88,6 +97,16 @@ class HashRegistry
 
   accept: (key) ->
     @[key]
+
+  isEmpty: ->
+    for own key of @
+      return false if key isnt 'in_use_keys'
+    true
+
+  removeProvider: (provider) ->
+    for own key, value of @
+      if value is provider
+        delete @[key]
 
   process_: (key, options, args...) ->
     FreeMart.log "HashRegistry.process_(#{toString key, options, args...})"
@@ -147,7 +166,8 @@ class this.FreeMart
 
   @register: (key, value) ->
     FreeMart.log "FreeMart.register(#{toString key, value})"
-    registry.add key, new Provider(key, value)
+    provider = new Provider(key, value)
+    registry.add key, provider
     if queues[key]
       for request in queues[key]
         FreeMart.log "Deferred request: #{toString key, request.args...}"
@@ -164,6 +184,12 @@ class this.FreeMart
         else
           request.resolve(result)
       delete queues[key]
+
+    provider
+
+  @deregister: (provider) ->
+    FreeMart.log "FreeMart.deregistere(#{toString provider})"
+    registry.removeProvider(provider)
 
   @request: (key, args...) ->
     FreeMart.log "FreeMart.request(#{toString key, args...})"

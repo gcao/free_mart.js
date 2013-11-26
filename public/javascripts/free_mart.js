@@ -8,6 +8,10 @@
 
   NO_PROVIDER = {};
 
+  isDeferred = function(o) {
+    return typeof (o != null ? o.promise : void 0) === 'function';
+  };
+
   extend = function(dest, src) {
     var key, value, _results;
     _results = [];
@@ -24,10 +28,6 @@
     obj = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     result = JSON.stringify(obj).replace(/"/g, "'");
     return result.substring(1, result.length - 1);
-  };
-
-  isDeferred = function(o) {
-    return typeof (o != null ? o.promise : void 0) === 'function';
   };
 
   InUse = {
@@ -72,6 +72,28 @@
         this.storage.push(child_registry);
       }
       return provider;
+    };
+
+    Registry.prototype.removeProvider = function(provider) {
+      var i, item, _i, _len, _ref, _results;
+      _ref = this.storage;
+      _results = [];
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        item = _ref[i];
+        if (item instanceof HashRegistry) {
+          item.removeProvider(provider);
+          if (item.isEmpty) {
+            _results.push(this.storage.splice(i, 1));
+          } else {
+            _results.push(void 0);
+          }
+        } else if (item.provider === provider) {
+          _results.push(this.storage.splice(i, 1));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     Registry.prototype.accept = function(key) {
@@ -153,6 +175,32 @@
 
     HashRegistry.prototype.accept = function(key) {
       return this[key];
+    };
+
+    HashRegistry.prototype.isEmpty = function() {
+      var key;
+      for (key in this) {
+        if (!__hasProp.call(this, key)) continue;
+        if (key !== 'in_use_keys') {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    HashRegistry.prototype.removeProvider = function(provider) {
+      var key, value, _results;
+      _results = [];
+      for (key in this) {
+        if (!__hasProp.call(this, key)) continue;
+        value = this[key];
+        if (value === provider) {
+          _results.push(delete this[key]);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     HashRegistry.prototype.process_ = function() {
@@ -255,9 +303,10 @@
     registry = new Registry();
 
     FreeMart.register = function(key, value) {
-      var func, request, result, _i, _len, _ref;
+      var func, provider, request, result, _i, _len, _ref;
       FreeMart.log("FreeMart.register(" + (toString(key, value)) + ")");
-      registry.add(key, new Provider(key, value));
+      provider = new Provider(key, value);
+      registry.add(key, provider);
       if (queues[key]) {
         _ref = queues[key];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -280,8 +329,14 @@
             request.resolve(result);
           }
         }
-        return delete queues[key];
+        delete queues[key];
       }
+      return provider;
+    };
+
+    FreeMart.deregister = function(provider) {
+      FreeMart.log("FreeMart.deregistere(" + (toString(provider)) + ")");
+      return registry.removeProvider(provider);
     };
 
     FreeMart.request = function() {

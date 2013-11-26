@@ -5,7 +5,7 @@ describe FreeMart, ->
     FreeMart.clear()
 
     FreeMart.log = ->
-    #Freemart.log = (msg) -> console.log msg
+    #FreeMart.log = (msg) -> console.log msg
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -213,4 +213,10 @@ describe FreeMart, ->
       result = value
     result[0].should.equal 'first'
     result[1].should.equal 'second'
+
+  it "deregister should work", ->
+    provider = FreeMart.register 'key', 'value'
+    FreeMart.deregister provider
+    func = -> FreeMart.request('key')
+    expect(func).toThrow(new Error("NO PROVIDER: key"))
 

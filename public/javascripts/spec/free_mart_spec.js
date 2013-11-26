@@ -227,7 +227,7 @@
       result[0].should.equal('first');
       return result[1].should.equal('second');
     });
-    return it("requestAllAsync should work", function() {
+    it("requestAllAsync should work", function() {
       var result;
       FreeMart.register('key', 'first');
       FreeMart.register('key', 'second');
@@ -237,6 +237,15 @@
       });
       result[0].should.equal('first');
       return result[1].should.equal('second');
+    });
+    return it("deregister should work", function() {
+      var func, provider;
+      provider = FreeMart.register('key', 'value');
+      FreeMart.deregister(provider);
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
   });
 
