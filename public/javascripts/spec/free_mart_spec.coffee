@@ -223,13 +223,26 @@ describe FreeMart, ->
   it "self-destruction should work", ->
     provider = FreeMart.register 'key', ->
       provider.count -= 1
-      if provider.count <= 0
-        # Self destroy
-        FreeMart.deregister provider
+      FreeMart.deregister provider if provider.count <= 0
 
       'value'
 
     provider.count = 2
+
+    FreeMart.request('key').should.equal 'value'
+    FreeMart.request('key').should.equal 'value'
+
+    func = -> FreeMart.request('key')
+    expect(func).toThrow(new Error("NO PROVIDER: key"))
+
+  it "defining provider value separately should work", ->
+    provider = FreeMart.register 'key'
+    provider.count = 2
+    provider.value = ->
+      provider.count -= 1
+      FreeMart.deregister provider if provider.count <= 0
+
+      'value'
 
     FreeMart.request('key').should.equal 'value'
     FreeMart.request('key').should.equal 'value'

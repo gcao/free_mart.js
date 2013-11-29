@@ -247,7 +247,7 @@
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
-    return it("self-destruction should work", function() {
+    it("self-destruction should work", function() {
       var func, provider;
       provider = FreeMart.register('key', function() {
         provider.count -= 1;
@@ -257,6 +257,24 @@
         return 'value';
       });
       provider.count = 2;
+      FreeMart.request('key').should.equal('value');
+      FreeMart.request('key').should.equal('value');
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key"));
+    });
+    return it("defining provider value separately should work", function() {
+      var func, provider;
+      provider = FreeMart.register('key');
+      provider.count = 2;
+      provider.value = function() {
+        provider.count -= 1;
+        if (provider.count <= 0) {
+          FreeMart.deregister(provider);
+        }
+        return 'value';
+      };
       FreeMart.request('key').should.equal('value');
       FreeMart.request('key').should.equal('value');
       func = function() {

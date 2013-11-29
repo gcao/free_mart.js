@@ -157,6 +157,9 @@ class Provider
     else
       result
 
+  #deregister: ->
+  #  FreeMart.deregister @
+
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
 # Providers can be deregistered
