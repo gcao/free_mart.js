@@ -256,6 +256,28 @@ class this.FreeMart
 
     result
 
+  @registerAsync: (key, value) ->
+    FreeMart.log "FreeMart.registerAsync(#{toString key, value})"
+    @register key, (args...) ->
+      if isDeferred value
+        return value
+
+      result = new Deferred()
+
+      if typeof value is 'function'
+        options = args[0]
+        options.deferred = result
+        value(args...)
+      else
+        result.resolve(value)
+
+      result
+
+  #@async: (callback) ->
+  #  result = new Deferred()
+  #  callback(result)
+  #  result
+
   @clear: -> registry.clear()
 
   @log: ->

@@ -82,6 +82,21 @@ describe FreeMart, ->
 
     result.should.equal 'value'
 
+  it "registerAsync/requestAsync should work with promises", ->
+    FreeMart.register 'a', 'aa'
+
+    FreeMart.registerAsync 'key', (options, arg) ->
+      FreeMart.requestAsync(arg).then (value) ->
+        options.deferred.resolve(value)
+
+      # What is returned does not matter
+      return
+
+    result = null
+    FreeMart.requestAsync('key', 'a').then (value) ->
+      result = value
+    result.should.equal 'aa'
+
   it "multiple requestAsync should work if provider is registered later", ->
     resultA = null
     deferredA = new Deferred()
@@ -175,6 +190,19 @@ describe FreeMart, ->
     FreeMart.requestAsync('key').then (value) ->
       result = value
     result.should.equal 'value'
+
+  #it "nested requestAsync with processing should work", ->
+  #  FreeMart.register 'a', 'aa'
+  #  FreeMart.register 'b', 'bb'
+  #  FreeMart.register 'key', ->
+  #    FreeMart.async (deferred) ->
+  #      FreeMart.requestMultiAsync('a', 'b').then (value1, value2) ->
+  #        deferred.resolve(value1 + value2)
+
+  #  result = null
+  #  FreeMart.requestAsync('key').then (value) ->
+  #    result = value
+  #  result.should.equal 'aabb'
 
   it "requestMulti should work", ->
     FreeMart.register 'a', 'aa'

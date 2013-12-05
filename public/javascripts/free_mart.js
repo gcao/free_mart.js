@@ -442,6 +442,26 @@
       return result;
     };
 
+    FreeMart.registerAsync = function(key, value) {
+      FreeMart.log("FreeMart.registerAsync(" + (toString(key, value)) + ")");
+      return this.register(key, function() {
+        var args, options, result;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        if (isDeferred(value)) {
+          return value;
+        }
+        result = new Deferred();
+        if (typeof value === 'function') {
+          options = args[0];
+          options.deferred = result;
+          value.apply(null, args);
+        } else {
+          result.resolve(value);
+        }
+        return result;
+      });
+    };
+
     FreeMart.clear = function() {
       return registry.clear();
     };
