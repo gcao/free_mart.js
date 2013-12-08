@@ -261,16 +261,44 @@
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
+    it("provider.deregister should work", function() {
+      var func, provider;
+      provider = FreeMart.register('key', 'value');
+      provider.deregister();
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key"));
+    });
     it("self-destruction should work", function() {
       var func, provider;
       provider = FreeMart.register('key', function() {
         provider.count -= 1;
         if (provider.count <= 0) {
-          FreeMart.deregister(provider);
+          provider.deregister();
         }
         return 'value';
       });
       provider.count = 2;
+      FreeMart.request('key').should.equal('value');
+      FreeMart.request('key').should.equal('value');
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key"));
+    });
+    it("options.provider", function() {
+      var func;
+      FreeMart.register('key', function(options) {
+        var provider;
+        provider = options.provider;
+        provider.count || (provider.count = 2);
+        provider.count -= 1;
+        if (provider.count <= 0) {
+          provider.deregister();
+        }
+        return 'value';
+      });
       FreeMart.request('key').should.equal('value');
       FreeMart.request('key').should.equal('value');
       func = function() {
@@ -285,7 +313,7 @@
       provider.value = function() {
         provider.count -= 1;
         if (provider.count <= 0) {
-          FreeMart.deregister(provider);
+          provider.deregister();
         }
         return 'value';
       };

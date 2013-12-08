@@ -211,7 +211,12 @@
       if (!provider) {
         return NO_PROVIDER;
       }
-      return provider.process.apply(provider, [options].concat(__slice.call(args)));
+      try {
+        options.provider = provider;
+        return provider.process.apply(provider, [options].concat(__slice.call(args)));
+      } finally {
+        delete options.provider;
+      }
     };
 
     return HashRegistry;
@@ -257,7 +262,12 @@
       if (!this.accept(key)) {
         return NO_PROVIDER;
       }
-      return (_ref = this.provider).process.apply(_ref, [options].concat(__slice.call(args)));
+      try {
+        options.provider = this.provider;
+        return (_ref = this.provider).process.apply(_ref, [options].concat(__slice.call(args)));
+      } finally {
+        delete options.provider;
+      }
     };
 
     return FuzzyRegistry;
@@ -286,6 +296,10 @@
       } else {
         return result;
       }
+    };
+
+    Provider.prototype.deregister = function() {
+      return FreeMart.deregister(this);
     };
 
     return Provider;

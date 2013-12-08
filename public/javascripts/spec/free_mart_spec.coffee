@@ -191,19 +191,6 @@ describe FreeMart, ->
       result = value
     result.should.equal 'value'
 
-  #it "nested requestAsync with processing should work", ->
-  #  FreeMart.register 'a', 'aa'
-  #  FreeMart.register 'b', 'bb'
-  #  FreeMart.register 'key', ->
-  #    FreeMart.async (deferred) ->
-  #      FreeMart.requestMultiAsync('a', 'b').then (value1, value2) ->
-  #        deferred.resolve(value1 + value2)
-
-  #  result = null
-  #  FreeMart.requestAsync('key').then (value) ->
-  #    result = value
-  #  result.should.equal 'aabb'
-
   it "requestMulti should work", ->
     FreeMart.register 'a', 'aa'
     FreeMart.register 'b', 'bb'
@@ -248,14 +235,35 @@ describe FreeMart, ->
     func = -> FreeMart.request('key')
     expect(func).toThrow(new Error("NO PROVIDER: key"))
 
+  it "provider.deregister should work", ->
+    provider = FreeMart.register 'key', 'value'
+    provider.deregister()
+    func = -> FreeMart.request('key')
+    expect(func).toThrow(new Error("NO PROVIDER: key"))
+
   it "self-destruction should work", ->
     provider = FreeMart.register 'key', ->
       provider.count -= 1
-      FreeMart.deregister provider if provider.count <= 0
+      if provider.count <= 0 then provider.deregister()
 
       'value'
 
     provider.count = 2
+
+    FreeMart.request('key').should.equal 'value'
+    FreeMart.request('key').should.equal 'value'
+
+    func = -> FreeMart.request('key')
+    expect(func).toThrow(new Error("NO PROVIDER: key"))
+
+  it "options.provider", ->
+    FreeMart.register 'key', (options) ->
+      provider = options.provider
+      provider.count ||= 2
+      provider.count -= 1
+      if provider.count <= 0 then provider.deregister()
+
+      'value'
 
     FreeMart.request('key').should.equal 'value'
     FreeMart.request('key').should.equal 'value'
@@ -268,7 +276,7 @@ describe FreeMart, ->
     provider.count = 2
     provider.value = ->
       provider.count -= 1
-      FreeMart.deregister provider if provider.count <= 0
+      if provider.count <= 0 then provider.deregister()
 
       'value'
 

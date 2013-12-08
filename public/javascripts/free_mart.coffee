@@ -112,7 +112,11 @@ class HashRegistry
     FreeMart.log "HashRegistry.process_(#{toString key, options, args...})"
     provider = @[key]
     return NO_PROVIDER unless provider
-    provider.process options, args...
+    try
+      options.provider = provider
+      provider.process options, args...
+    finally
+      delete options.provider
 
 class FuzzyRegistry
   extend @.prototype, InUse
@@ -134,7 +138,11 @@ class FuzzyRegistry
   process_: (key, options, args...) ->
     FreeMart.log "FuzzyRegistry.process_(#{toString key, options, args...})"
     return NO_PROVIDER unless @accept key
-    @provider.process options, args...
+    try
+      options.provider = @provider
+      @provider.process options, args...
+    finally
+      delete options.provider
 
 class Provider
   constructor: (@value) ->
@@ -157,8 +165,8 @@ class Provider
     else
       result
 
-  #deregister: ->
-  #  FreeMart.deregister @
+  deregister: ->
+    FreeMart.deregister @
 
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
@@ -272,11 +280,6 @@ class this.FreeMart
         result.resolve(value)
 
       result
-
-  #@async: (callback) ->
-  #  result = new Deferred()
-  #  callback(result)
-  #  result
 
   @clear: -> registry.clear()
 
