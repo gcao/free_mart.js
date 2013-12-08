@@ -219,11 +219,23 @@
       result[0].should.equal('aa');
       return result[1].should.equal('bb');
     });
+    it("requestMulti should work with multiple keys and args", function() {
+      var result;
+      FreeMart.register('a', 'aa');
+      FreeMart.register('b', function(_, arg) {
+        return arg;
+      });
+      result = FreeMart.requestMulti('a', ['b', 'arg']);
+      result[0].should.equal('aa');
+      return result[1].should.equal('arg');
+    });
     it("requestMultiAsync should work", function() {
       var result, result1, result2;
       FreeMart.register('a', 'aa');
-      FreeMart.register('b', 'bb');
-      result = FreeMart.requestMultiAsync('a', 'b');
+      FreeMart.register('b', function(_, arg) {
+        return arg;
+      });
+      result = FreeMart.requestMultiAsync('a', ['b', 'arg']);
       result1 = null;
       result2 = null;
       result.then(function(value1, value2) {
@@ -231,7 +243,7 @@
         return result2 = value2;
       });
       result1.should.equal('aa');
-      return result2.should.equal('bb');
+      return result2.should.equal('arg');
     });
     it("requestAll should work", function() {
       var result;

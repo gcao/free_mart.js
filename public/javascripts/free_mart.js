@@ -238,7 +238,7 @@
       FreeMart.log("FuzzyRegistry.accept(" + key + ")");
       if (this.fuzzy_key instanceof RegExp) {
         return key.match(this.fuzzy_key);
-      } else if (this.fuzzy_key instanceof Array) {
+      } else if (Object.prototype.toString.call(this.fuzzy_key) === '[object Array]') {
         _ref = this.fuzzy_key;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
@@ -401,7 +401,7 @@
       _results = [];
       for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
         keyAndArg = keyAndArgs[_i];
-        if (typeof keyAndArg === 'object' && keyAndArg.length) {
+        if (Object.prototype.toString.call(keyAndArg) === '[object Array]') {
           _results.push(this.request.apply(this, keyAndArg));
         } else {
           _results.push(this.request(keyAndArg));

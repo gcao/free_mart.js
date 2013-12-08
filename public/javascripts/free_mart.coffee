@@ -128,7 +128,7 @@ class FuzzyRegistry
     FreeMart.log "FuzzyRegistry.accept(#{key})"
     if @fuzzy_key instanceof RegExp
       key.match @fuzzy_key
-    else if @fuzzy_key instanceof Array
+    else if Object.prototype.toString.call(@fuzzy_key) is '[object Array]'
       for item in @fuzzy_key
         if item instanceof String
           return true if item is key
@@ -234,7 +234,7 @@ class this.FreeMart
   @requestMulti: (keyAndArgs...) ->
     FreeMart.log "FreeMart.requestMulti(#{toString keyAndArgs})"
     for keyAndArg in keyAndArgs
-      if typeof keyAndArg is 'object' and keyAndArg.length
+      if Object.prototype.toString.call(keyAndArg) is '[object Array]'
         @request keyAndArg...
       else
         @request keyAndArg

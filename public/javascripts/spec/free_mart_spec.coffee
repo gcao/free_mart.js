@@ -198,18 +198,25 @@ describe FreeMart, ->
     result[0].should.equal 'aa'
     result[1].should.equal 'bb'
 
+  it "requestMulti should work with multiple keys and args", ->
+    FreeMart.register 'a', 'aa'
+    FreeMart.register 'b', (_, arg) -> arg
+    result = FreeMart.requestMulti('a', ['b', 'arg'])
+    result[0].should.equal 'aa'
+    result[1].should.equal 'arg'
+
   it "requestMultiAsync should work", ->
     FreeMart.register 'a', 'aa'
-    FreeMart.register 'b', 'bb'
+    FreeMart.register 'b', (_, arg) -> arg
 
-    result = FreeMart.requestMultiAsync('a', 'b')
+    result = FreeMart.requestMultiAsync('a', ['b', 'arg'])
     result1 = null
     result2 = null
     result.then (value1, value2) ->
       result1 = value1
       result2 = value2
     result1.should.equal 'aa'
-    result2.should.equal 'bb'
+    result2.should.equal 'arg'
 
   it "requestAll should work", ->
     FreeMart.register 'key', 'first'
