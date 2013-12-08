@@ -209,10 +209,9 @@ describe FreeMart, ->
     FreeMart.register 'a', 'aa'
     FreeMart.register 'b', (_, arg) -> arg
 
-    result = FreeMart.requestMultiAsync('a', ['b', 'arg'])
     result1 = null
     result2 = null
-    result.then (value1, value2) ->
+    FreeMart.requestMultiAsync('a', ['b', 'arg']).then (value1, value2) ->
       result1 = value1
       result2 = value2
     result1.should.equal 'aa'
@@ -282,4 +281,15 @@ describe FreeMart, ->
     provider = FreeMart.register 'key'
     provider.value = 'value'
     FreeMart.request('key').should.equal 'value'
+
+  it "continue to other providers if NOT_FOUND", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.register 'key', FreeMart.NOT_FOUND
+    FreeMart.request('key').should.equal 'value'
+
+  it "stop looking further if NOT_FOUND_FINAL", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.register 'key', FreeMart.NOT_FOUND_FINAL
+    func = -> FreeMart.request('key')
+    expect(func).toThrow(new Error("NOT FOUND: key"))
 

@@ -1,5 +1,7 @@
-NOT_FOUND   = {}
-NO_PROVIDER = {}
+NOT_FOUND       = {}
+# will not look further if this is returned
+NOT_FOUND_FINAL = {}
+NO_PROVIDER     = {}
 
 isDeferred = (o) -> typeof o?.promise is 'function'
 
@@ -85,7 +87,10 @@ class Registry
 
         processed = true
         result = item.process key, options, args...
-        return result unless result is NOT_FOUND
+        if result is NOT_FOUND_FINAL
+          break
+        else if result isnt NOT_FOUND
+          return result
 
       if processed then NOT_FOUND else NO_PROVIDER
 
@@ -284,6 +289,9 @@ class this.FreeMart
   @clear: -> registry.clear()
 
   @log: ->
+
+  @NOT_FOUND       = NOT_FOUND
+  @NOT_FOUND_FINAL = NOT_FOUND_FINAL
 
   # aliases
   @req          : @request

@@ -230,15 +230,14 @@
       return result[1].should.equal('arg');
     });
     it("requestMultiAsync should work", function() {
-      var result, result1, result2;
+      var result1, result2;
       FreeMart.register('a', 'aa');
       FreeMart.register('b', function(_, arg) {
         return arg;
       });
-      result = FreeMart.requestMultiAsync('a', ['b', 'arg']);
       result1 = null;
       result2 = null;
-      result.then(function(value1, value2) {
+      FreeMart.requestMultiAsync('a', ['b', 'arg']).then(function(value1, value2) {
         result1 = value1;
         return result2 = value2;
       });
@@ -318,11 +317,25 @@
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
-    return it("defining provider value separately should work", function() {
+    it("defining provider value separately should work", function() {
       var provider;
       provider = FreeMart.register('key');
       provider.value = 'value';
       return FreeMart.request('key').should.equal('value');
+    });
+    it("continue to other providers if NOT_FOUND", function() {
+      FreeMart.register('key', 'value');
+      FreeMart.register('key', FreeMart.NOT_FOUND);
+      return FreeMart.request('key').should.equal('value');
+    });
+    return it("stop looking further if NOT_FOUND_FINAL", function() {
+      var func;
+      FreeMart.register('key', 'value');
+      FreeMart.register('key', FreeMart.NOT_FOUND_FINAL);
+      func = function() {
+        return FreeMart.request('key');
+      };
+      return expect(func).toThrow(new Error("NOT FOUND: key"));
     });
   });
 
