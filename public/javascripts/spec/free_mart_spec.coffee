@@ -273,16 +273,6 @@ describe FreeMart, ->
 
   it "defining provider value separately should work", ->
     provider = FreeMart.register 'key'
-    provider.count = 2
-    provider.value = ->
-      provider.count -= 1
-      if provider.count <= 0 then provider.deregister()
-
-      'value'
-
+    provider.value = 'value'
     FreeMart.request('key').should.equal 'value'
-    FreeMart.request('key').should.equal 'value'
-
-    func = -> FreeMart.request('key')
-    expect(func).toThrow(new Error("NO PROVIDER: key"))
 
