@@ -328,7 +328,7 @@
       FreeMart.register('key', FreeMart.NOT_FOUND);
       return FreeMart.request('key').should.equal('value');
     });
-    return it("stop looking further if NOT_FOUND_FINAL", function() {
+    it("stop looking further if NOT_FOUND_FINAL", function() {
       var func;
       FreeMart.register('key', 'value');
       FreeMart.register('key', FreeMart.NOT_FOUND_FINAL);
@@ -336,6 +336,12 @@
         return FreeMart.request('key');
       };
       return expect(func).toThrow(new Error("NOT FOUND: key"));
+    });
+    return it("clone should work", function() {
+      var instance;
+      instance = FreeMart.clone();
+      instance.register('key', 'value');
+      return instance.request('key').should.equal('value');
     });
   });
 

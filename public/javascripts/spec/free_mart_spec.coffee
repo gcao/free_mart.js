@@ -293,3 +293,7 @@ describe FreeMart, ->
     func = -> FreeMart.request('key')
     expect(func).toThrow(new Error("NOT FOUND: key"))
 
+  it "clone should work", ->
+    instance = FreeMart.clone()
+    instance.register 'key', 'value'
+    instance.request('key').should.equal 'value'

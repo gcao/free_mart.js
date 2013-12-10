@@ -176,18 +176,19 @@ class Provider
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
 # Providers can be deregistered
-class this.FreeMart
-  queues = {}
-  registry = new Registry()
+class FreeMartInternal
+  constructor: ->
+    @queues = {}
+    @registry = new Registry()
 
-  @register: (key, value) ->
+  register: (key, value) ->
     FreeMart.log "FreeMart.register(#{toString key, value})"
     provider = new Provider(value)
-    registry.add key, provider
-    if queues[key]
-      for request in queues[key]
+    @registry.add key, provider
+    if @queues[key]
+      for request in @queues[key]
         FreeMart.log "Deferred request: #{toString key, request.args...}"
-        result = registry.process key, {async: true}, request.args...
+        result = @registry.process key, {async: true}, request.args...
         FreeMart.log "Deferred request result: #{toString result}"
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
@@ -199,17 +200,17 @@ class this.FreeMart
           func(request)
         else
           request.resolve(result)
-      delete queues[key]
+      delete @queues[key]
 
     provider
 
-  @deregister: (provider) ->
+  deregister: (provider) ->
     FreeMart.log "FreeMart.deregistere(#{toString provider})"
-    registry.removeProvider(provider)
+    @registry.removeProvider(provider)
 
-  @request: (key, args...) ->
+  request: (key, args...) ->
     FreeMart.log "FreeMart.request(#{toString key, args...})"
-    result = registry.process key, {}, args...
+    result = @registry.process key, {}, args...
     if result is NO_PROVIDER
       throw "NO PROVIDER: #{key}"
     else if result is NOT_FOUND
@@ -223,20 +224,20 @@ class this.FreeMart
     request.args = args
     request
 
-  @requestAsync: (key, args...) ->
+  requestAsync: (key, args...) ->
     FreeMart.log "FreeMart.requestAsync(#{toString key, args...})"
-    result = registry.process key, {async: true}, args...
+    result = @registry.process key, {async: true}, args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
-      queues[key] ||= []
-      queues[key].push request
+      @queues[key] ||= []
+      @queues[key].push request
       request
     else if result is NOT_FOUND
       throw "NOT FOUND: #{key}"
     else
       result
 
-  @requestMulti: (keyAndArgs...) ->
+  requestMulti: (keyAndArgs...) ->
     FreeMart.log "FreeMart.requestMulti(#{toString keyAndArgs})"
     for keyAndArg in keyAndArgs
       if Object.prototype.toString.call(keyAndArg) is '[object Array]'
@@ -244,7 +245,7 @@ class this.FreeMart
       else
         @request keyAndArg
 
-  @requestMultiAsync: (keyAndArgs...) ->
+  requestMultiAsync: (keyAndArgs...) ->
     FreeMart.log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
     requests =
       for keyAndArg in keyAndArgs
@@ -255,21 +256,21 @@ class this.FreeMart
 
     Deferred.when requests...
 
-  @requestAll: (key, args...) ->
+  requestAll: (key, args...) ->
     FreeMart.log "FreeMart.requestAll(#{toString key, args...})"
-    registry.process key, {all: true}, args...
+    @registry.process key, {all: true}, args...
 
-  @requestAllAsync: (key, args...) ->
+  requestAllAsync: (key, args...) ->
     FreeMart.log "FreeMart.requestAllAsync(#{toString key, args...})"
     result = new Deferred()
 
-    requests = registry.process key, {all: true, async: true}, args...
+    requests = @registry.process key, {all: true, async: true}, args...
     Deferred.when(requests...).then (results...) ->
       result.resolve(results)
 
     result
 
-  @registerAsync: (key, value) ->
+  registerAsync: (key, value) ->
     FreeMart.log "FreeMart.registerAsync(#{toString key, value})"
     @register key, (args...) ->
       if isDeferred value
@@ -286,18 +287,19 @@ class this.FreeMart
 
       result
 
-  @clear: -> registry.clear()
+  clear: -> @registry.clear()
 
-  @log: ->
+# aliases
+FreeMartInternal.prototype.req          = FreeMartInternal.prototype.request
+FreeMartInternal.prototype.reqAsync     = FreeMartInternal.prototype.requestAsync
+FreeMartInternal.prototype.reqMulti     = FreeMartInternal.prototype.requestMulti
+FreeMartInternal.prototype.reqMultiAsync= FreeMartInternal.prototype.requestMultiAsync
+FreeMartInternal.prototype.reqAll       = FreeMartInternal.prototype.requestAll
+FreeMartInternal.prototype.reqAllAsync  = FreeMartInternal.prototype.requestAllAsync
 
-  @NOT_FOUND       = NOT_FOUND
-  @NOT_FOUND_FINAL = NOT_FOUND_FINAL
-
-  # aliases
-  @req          : @request
-  @reqAsync     : @requestAsync
-  @reqMulti     : @requestMulti
-  @reqMultiAsync: @requestMultiAsync
-  @reqAll       : @requestAll
-  @reqAllAsync  : @requestAllAsync
+@FreeMart                 = new FreeMartInternal()
+@FreeMart.clone           = -> new FreeMartInternal()
+@FreeMart.log             = ->
+@FreeMart.NOT_FOUND       = NOT_FOUND
+@FreeMart.NOT_FOUND_FINAL = NOT_FOUND_FINAL
 
