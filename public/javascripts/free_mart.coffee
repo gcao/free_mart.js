@@ -177,7 +177,8 @@ class Provider
 # fuzzy => hash => fuzzy
 # Providers can be deregistered
 class FreeMartInternal
-  constructor: ->
+  constructor: (@name) ->
+    @name ||= 'Black Market'
     @queues = {}
     @registry = new Registry()
 
@@ -297,8 +298,8 @@ FreeMartInternal.prototype.reqMultiAsync= FreeMartInternal.prototype.requestMult
 FreeMartInternal.prototype.reqAll       = FreeMartInternal.prototype.requestAll
 FreeMartInternal.prototype.reqAllAsync  = FreeMartInternal.prototype.requestAllAsync
 
-@FreeMart                 = new FreeMartInternal()
-@FreeMart.clone           = -> new FreeMartInternal()
+@FreeMart                 = new FreeMartInternal('Free Mart')
+@FreeMart.clone           = (name) -> new FreeMartInternal(name)
 @FreeMart.log             = ->
 @FreeMart.NOT_FOUND       = NOT_FOUND
 @FreeMart.NOT_FOUND_FINAL = NOT_FOUND_FINAL

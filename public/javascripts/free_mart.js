@@ -313,7 +313,9 @@
   FreeMartInternal = (function() {
     var createDeferredRequest;
 
-    function FreeMartInternal() {
+    function FreeMartInternal(name) {
+      this.name = name;
+      this.name || (this.name = 'Black Market');
       this.queues = {};
       this.registry = new Registry();
     }
@@ -499,10 +501,10 @@
 
   FreeMartInternal.prototype.reqAllAsync = FreeMartInternal.prototype.requestAllAsync;
 
-  this.FreeMart = new FreeMartInternal();
+  this.FreeMart = new FreeMartInternal('Free Mart');
 
-  this.FreeMart.clone = function() {
-    return new FreeMartInternal();
+  this.FreeMart.clone = function(name) {
+    return new FreeMartInternal(name);
   };
 
   this.FreeMart.log = function() {};
