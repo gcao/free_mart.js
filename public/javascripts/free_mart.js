@@ -342,6 +342,7 @@
       this.name || (this.name = 'Black Market');
       this.queues = {};
       this.registry = new Registry(this);
+      this.disableLog();
     }
 
     FreeMartInternal.prototype.register = function(key, value) {

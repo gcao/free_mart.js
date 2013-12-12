@@ -199,6 +199,7 @@ class FreeMartInternal
     @name ||= 'Black Market'
     @queues = {}
     @registry = new Registry(@)
+    @disableLog()
 
   register: (key, value) ->
     @log 'register', key, value
@@ -315,7 +316,7 @@ class FreeMartInternal
   disableLog: ->
     unless @log_
       @log_ = @log
-      @log = ->
+      @log  = ->
 
   enableLog: ->
     if @log_
