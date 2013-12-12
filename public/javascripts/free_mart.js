@@ -541,6 +541,10 @@
       }
     };
 
+    FreeMartInternal.prototype.NOT_FOUND = NOT_FOUND;
+
+    FreeMartInternal.prototype.NOT_FOUND_FINAL = NOT_FOUND_FINAL;
+
     return FreeMartInternal;
 
   })();
@@ -562,9 +566,5 @@
   this.FreeMart.clone = function(name) {
     return new FreeMartInternal(name);
   };
-
-  this.FreeMart.NOT_FOUND = NOT_FOUND;
-
-  this.FreeMart.NOT_FOUND_FINAL = NOT_FOUND_FINAL;
 
 }).call(this);

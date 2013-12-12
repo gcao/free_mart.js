@@ -328,6 +328,9 @@ class FreeMartInternal
       @log = @log_
       delete @log_
 
+  NOT_FOUND      : NOT_FOUND
+  NOT_FOUND_FINAL: NOT_FOUND_FINAL
+
 # aliases
 FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request
 FreeMartInternal.prototype.reqAsync      = FreeMartInternal.prototype.requestAsync
@@ -336,8 +339,6 @@ FreeMartInternal.prototype.reqMultiAsync = FreeMartInternal.prototype.requestMul
 FreeMartInternal.prototype.reqAll        = FreeMartInternal.prototype.requestAll
 FreeMartInternal.prototype.reqAllAsync   = FreeMartInternal.prototype.requestAllAsync
 
-@FreeMart                 = new FreeMartInternal('Free Mart')
-@FreeMart.clone           = (name) -> new FreeMartInternal(name)
-@FreeMart.NOT_FOUND       = NOT_FOUND
-@FreeMart.NOT_FOUND_FINAL = NOT_FOUND_FINAL
+@FreeMart       = new FreeMartInternal('Free Mart')
+@FreeMart.clone = (name) -> new FreeMartInternal(name)
 

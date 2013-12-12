@@ -6,7 +6,8 @@
 
   describe(FreeMart, function() {
     beforeEach(function() {
-      return FreeMart.clear();
+      FreeMart.clear();
+      return FreeMart.disableLog();
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');

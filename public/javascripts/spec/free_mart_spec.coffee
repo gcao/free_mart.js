@@ -3,6 +3,7 @@ chai.should()
 describe FreeMart, ->
   beforeEach ->
     FreeMart.clear()
+    FreeMart.disableLog()
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
