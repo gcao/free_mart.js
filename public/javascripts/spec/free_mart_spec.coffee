@@ -4,8 +4,7 @@ describe FreeMart, ->
   beforeEach ->
     FreeMart.clear()
 
-    FreeMart.log = ->
-    #FreeMart.log = (msg) -> console.log msg
+    FreeMart.disableLog()
 
   it "register/request should work", ->
     FreeMart.register 'key', 'value'
@@ -295,5 +294,7 @@ describe FreeMart, ->
 
   it "clone should work", ->
     instance = FreeMart.clone()
+    instance.disableLog()
     instance.register 'key', 'value'
     instance.request('key').should.equal 'value'
+

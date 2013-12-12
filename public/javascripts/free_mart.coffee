@@ -9,13 +9,31 @@ extend = (dest, src) ->
   for own key, value of src
     dest[key] = value
 
+stringifyCache = null
+stringifyCallback = (key, value) ->
+  if typeof value is "object" and value isnt null
+    
+    # Circular reference found, discard key
+    return if stringifyCache.indexOf(value) >= 0
+    
+    # Store value in our collection
+    stringifyCache.push value
+
+  value
+
+stringify = (o) ->
+  stringifyCache = []
+  result = JSON.stringify(o, stringifyCallback)
+  stringifyCache = null
+  result
+
 toString = (obj...) ->
-  result = JSON.stringify(obj).replace(/"/g, "'")
-  result.substring(1, result.length - 1)
+  result = stringify(obj)
+  result.replace(/"/g, "'").substring(1, result.length - 1)
 
 InUse =
   process: (key, options, args...) ->
-    FreeMart.log "InUse.process(#{toString key, options, args...})"
+    @market.log "InUse.process", key, options, args...
     try
       @in_use_keys.push key
       @process_ key, options, args...
@@ -26,7 +44,7 @@ InUse =
     @in_use_keys.indexOf(key) >= 0
 
 class Registry
-  constructor: ->
+  constructor: (@market) ->
     @storage = []
 
   clear: ->
@@ -38,10 +56,10 @@ class Registry
       last[key] = provider
     else
       if typeof key is 'string'
-        child_registry = new HashRegistry()
+        child_registry = new HashRegistry(@market)
         child_registry[key] = provider
       else
-        child_registry = new FuzzyRegistry key, provider
+        child_registry = new FuzzyRegistry(@market, key, provider)
       @storage.push child_registry
 
     provider
@@ -60,7 +78,7 @@ class Registry
       if item.accept key then return true
 
   process: (key, options, args...) ->
-    FreeMart.log "Registry.process(#{toString key, options, args...})"
+    @market.log "Registry.process", key, options, args...
 
     if @storage.length is 0
       return NO_PROVIDER
@@ -97,7 +115,7 @@ class Registry
 class HashRegistry
   extend @.prototype, InUse
 
-  constructor: ->
+  constructor: (@market) ->
     @in_use_keys = []
 
   accept: (key) ->
@@ -114,7 +132,7 @@ class HashRegistry
         delete @[key]
 
   process_: (key, options, args...) ->
-    FreeMart.log "HashRegistry.process_(#{toString key, options, args...})"
+    @market.log "HashRegistry.process_", key, options, args...
     provider = @[key]
     return NO_PROVIDER unless provider
     try
@@ -126,11 +144,11 @@ class HashRegistry
 class FuzzyRegistry
   extend @.prototype, InUse
 
-  constructor: (@fuzzy_key, @provider) ->
+  constructor: (@market, @fuzzy_key, @provider) ->
     @in_use_keys = []
 
   accept: (key) ->
-    FreeMart.log "FuzzyRegistry.accept(#{key})"
+    @market.log "FuzzyRegistry.accept", key
     if @fuzzy_key instanceof RegExp
       key.match @fuzzy_key
     else if Object.prototype.toString.call(@fuzzy_key) is '[object Array]'
@@ -141,7 +159,7 @@ class FuzzyRegistry
           return true if key.match(item)
 
   process_: (key, options, args...) ->
-    FreeMart.log "FuzzyRegistry.process_(#{toString key, options, args...})"
+    @market.log "FuzzyRegistry.process_", key, options, args...
     return NO_PROVIDER unless @accept key
     try
       options.provider = @provider
@@ -150,11 +168,11 @@ class FuzzyRegistry
       delete options.provider
 
 class Provider
-  constructor: (@value) ->
-    FreeMart.log "Provider.constructor(#{toString @value})"
+  constructor: (@market, @value) ->
+    @market.log "Provider.constructor", @value
 
   process: (args...) ->
-    FreeMart.log "Provider.process(#{toString args...})"
+    @market.log "Provider.process", args...
     result =
       if typeof @value is 'function'
         @value args...
@@ -180,17 +198,17 @@ class FreeMartInternal
   constructor: (@name) ->
     @name ||= 'Black Market'
     @queues = {}
-    @registry = new Registry()
+    @registry = new Registry(@)
 
   register: (key, value) ->
-    FreeMart.log "FreeMart.register(#{toString key, value})"
-    provider = new Provider(value)
+    @log 'register', key, value
+    provider = new Provider(@, value)
     @registry.add key, provider
     if @queues[key]
       for request in @queues[key]
-        FreeMart.log "Deferred request: #{toString key, request.args...}"
+        @log 'register - deferred request', key, request.args...
         result = @registry.process key, {async: true}, request.args...
-        FreeMart.log "Deferred request result: #{toString result}"
+        @log 'register - deferred request result', result
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
         else if isDeferred result
@@ -206,11 +224,11 @@ class FreeMartInternal
     provider
 
   deregister: (provider) ->
-    FreeMart.log "FreeMart.deregistere(#{toString provider})"
+    @log 'deregister', provider
     @registry.removeProvider(provider)
 
   request: (key, args...) ->
-    FreeMart.log "FreeMart.request(#{toString key, args...})"
+    @log 'request', key, args...
     result = @registry.process key, {}, args...
     if result is NO_PROVIDER
       throw "NO PROVIDER: #{key}"
@@ -226,7 +244,7 @@ class FreeMartInternal
     request
 
   requestAsync: (key, args...) ->
-    FreeMart.log "FreeMart.requestAsync(#{toString key, args...})"
+    @log 'requestAsync', key, args...
     result = @registry.process key, {async: true}, args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
@@ -239,7 +257,7 @@ class FreeMartInternal
       result
 
   requestMulti: (keyAndArgs...) ->
-    FreeMart.log "FreeMart.requestMulti(#{toString keyAndArgs})"
+    @log 'requestMulti', keyAndArgs...
     for keyAndArg in keyAndArgs
       if Object.prototype.toString.call(keyAndArg) is '[object Array]'
         @request keyAndArg...
@@ -247,7 +265,7 @@ class FreeMartInternal
         @request keyAndArg
 
   requestMultiAsync: (keyAndArgs...) ->
-    FreeMart.log "FreeMart.requestAsyncMulti(#{toString keyAndArgs})"
+    @log 'requestMultiAsync', keyAndArgs...
     requests =
       for keyAndArg in keyAndArgs
         if typeof keyAndArg is 'object' and keyAndArg.length
@@ -258,11 +276,11 @@ class FreeMartInternal
     Deferred.when requests...
 
   requestAll: (key, args...) ->
-    FreeMart.log "FreeMart.requestAll(#{toString key, args...})"
+    @log 'requestAll', key, args...
     @registry.process key, {all: true}, args...
 
   requestAllAsync: (key, args...) ->
-    FreeMart.log "FreeMart.requestAllAsync(#{toString key, args...})"
+    @log 'requestAllAsync', key, args...
     result = new Deferred()
 
     requests = @registry.process key, {all: true, async: true}, args...
@@ -272,7 +290,7 @@ class FreeMartInternal
     result
 
   registerAsync: (key, value) ->
-    FreeMart.log "FreeMart.registerAsync(#{toString key, value})"
+    @log 'registerAsync', key, value
     @register key, (args...) ->
       if isDeferred value
         return value
@@ -290,17 +308,30 @@ class FreeMartInternal
 
   clear: -> @registry.clear()
 
+  log: (args...) ->
+    operation = args.shift()
+    console.log "#{@name} - #{operation}: #{toString args...}"
+
+  disableLog: ->
+    unless @log_
+      @log_ = @log
+      @log = ->
+
+  enableLog: ->
+    if @log_
+      @log = @log_
+      delete @log_
+
 # aliases
-FreeMartInternal.prototype.req          = FreeMartInternal.prototype.request
-FreeMartInternal.prototype.reqAsync     = FreeMartInternal.prototype.requestAsync
-FreeMartInternal.prototype.reqMulti     = FreeMartInternal.prototype.requestMulti
-FreeMartInternal.prototype.reqMultiAsync= FreeMartInternal.prototype.requestMultiAsync
-FreeMartInternal.prototype.reqAll       = FreeMartInternal.prototype.requestAll
-FreeMartInternal.prototype.reqAllAsync  = FreeMartInternal.prototype.requestAllAsync
+FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request
+FreeMartInternal.prototype.reqAsync      = FreeMartInternal.prototype.requestAsync
+FreeMartInternal.prototype.reqMulti      = FreeMartInternal.prototype.requestMulti
+FreeMartInternal.prototype.reqMultiAsync = FreeMartInternal.prototype.requestMultiAsync
+FreeMartInternal.prototype.reqAll        = FreeMartInternal.prototype.requestAll
+FreeMartInternal.prototype.reqAllAsync   = FreeMartInternal.prototype.requestAllAsync
 
 @FreeMart                 = new FreeMartInternal('Free Mart')
 @FreeMart.clone           = (name) -> new FreeMartInternal(name)
-@FreeMart.log             = ->
 @FreeMart.NOT_FOUND       = NOT_FOUND
 @FreeMart.NOT_FOUND_FINAL = NOT_FOUND_FINAL
 

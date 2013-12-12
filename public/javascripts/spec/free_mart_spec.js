@@ -7,7 +7,7 @@
   describe(FreeMart, function() {
     beforeEach(function() {
       FreeMart.clear();
-      return FreeMart.log = function() {};
+      return FreeMart.disableLog();
     });
     it("register/request should work", function() {
       FreeMart.register('key', 'value');
@@ -340,6 +340,7 @@
     return it("clone should work", function() {
       var instance;
       instance = FreeMart.clone();
+      instance.disableLog();
       instance.register('key', 'value');
       return instance.request('key').should.equal('value');
     });
