@@ -363,8 +363,14 @@
             throw "NOT FOUND: " + key;
           } else if (isDeferred(result)) {
             func = function(req) {
-              return result.then(function(v) {
-                return req.resolve(v);
+              return result.then(function() {
+                var v;
+                v = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                return req.resolve.apply(req, v);
+              }, function() {
+                var v;
+                v = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                return req.reject.apply(req, v);
               });
             };
             func(request);
@@ -482,6 +488,10 @@
         var results;
         results = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
         return result.resolve(results);
+      }, function() {
+        var results;
+        results = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return result.reject(results);
       });
       return result;
     };

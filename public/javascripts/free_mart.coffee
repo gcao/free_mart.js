@@ -216,7 +216,10 @@ class FreeMartInternal
           # Use a closure to ensure request in the callback is not changed
           # by the iterator to another
           func = (req) ->
-            result.then (v) -> req.resolve(v)
+            result.then(
+              (v...) -> req.resolve(v...)
+            , (v...) -> req.reject(v...)
+            )
           func(request)
         else
           request.resolve(result)
@@ -285,8 +288,10 @@ class FreeMartInternal
     result = new Deferred()
 
     requests = @registry.process key, {all: true, async: true}, args...
-    Deferred.when(requests...).then (results...) ->
-      result.resolve(results)
+    Deferred.when(requests...).then(
+      (results...) -> result.resolve(results)
+    , (results...) -> result.reject(results)
+    )
 
     result
 
