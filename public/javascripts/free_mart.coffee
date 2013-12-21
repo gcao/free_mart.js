@@ -198,10 +198,7 @@ class ValueProvider extends Provider
 
     options = args[0]
     if options?.async
-      if isDeferred result
-        result
-      else
-        new Deferred().resolve(result)
+      new Deferred().resolve(result)
     else
       result
 

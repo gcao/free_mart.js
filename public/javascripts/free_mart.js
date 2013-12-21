@@ -350,11 +350,7 @@
       result = this.value;
       options = args[0];
       if (options != null ? options.async : void 0) {
-        if (isDeferred(result)) {
-          return result;
-        } else {
-          return new Deferred().resolve(result);
-        }
+        return new Deferred().resolve(result);
       } else {
         return result;
       }
