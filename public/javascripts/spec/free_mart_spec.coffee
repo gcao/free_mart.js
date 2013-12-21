@@ -9,6 +9,10 @@ describe FreeMart, ->
     FreeMart.register 'key', 'value'
     FreeMart.request('key').should.equal 'value'
 
+  it "value/request should work", ->
+    FreeMart.value 'key', -> 'value'
+    FreeMart.request('key')().should.equal 'value'
+
   it "register/req should work", ->
     FreeMart.register 'key', 'value'
     FreeMart.req('key').should.equal 'value'
@@ -293,7 +297,6 @@ describe FreeMart, ->
 
   it "clone should work", ->
     instance = FreeMart.clone()
-    instance.disableLog()
     instance.register 'key', 'value'
     instance.request('key').should.equal 'value'
 

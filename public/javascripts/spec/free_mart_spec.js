@@ -13,6 +13,12 @@
       FreeMart.register('key', 'value');
       return FreeMart.request('key').should.equal('value');
     });
+    it("value/request should work", function() {
+      FreeMart.value('key', function() {
+        return 'value';
+      });
+      return FreeMart.request('key')().should.equal('value');
+    });
     it("register/req should work", function() {
       FreeMart.register('key', 'value');
       return FreeMart.req('key').should.equal('value');
@@ -340,7 +346,6 @@
     return it("clone should work", function() {
       var instance;
       instance = FreeMart.clone();
-      instance.disableLog();
       instance.register('key', 'value');
       return instance.request('key').should.equal('value');
     });

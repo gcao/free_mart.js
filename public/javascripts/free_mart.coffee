@@ -191,6 +191,20 @@ class Provider
   deregister: ->
     FreeMart.deregister @
 
+class ValueProvider extends Provider
+  process: (args...) ->
+    @market.log "ValueProvider.process", args...
+    result = @value
+
+    options = args[0]
+    if options?.async
+      if isDeferred result
+        result
+      else
+        new Deferred().resolve(result)
+    else
+      result
+
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
 # Providers can be deregistered
@@ -204,6 +218,32 @@ class FreeMartInternal
   register: (key, value) ->
     @log 'register', key, value
     provider = new Provider(@, value)
+    @registry.add key, provider
+    if @queues[key]
+      for request in @queues[key]
+        @log 'register - deferred request', key, request.args...
+        result = @registry.process key, {async: true}, request.args...
+        @log 'register - deferred request result', result
+        if result is NOT_FOUND
+          throw "NOT FOUND: #{key}"
+        else if isDeferred result
+          # Use a closure to ensure request in the callback is not changed
+          # by the iterator to another
+          func = (req) ->
+            result.then(
+              (v...) -> req.resolve(v...)
+            , (v...) -> req.reject(v...)
+            )
+          func(request)
+        else
+          request.resolve(result)
+      delete @queues[key]
+
+    provider
+
+  value: (key, value) ->
+    @log 'value', key, value
+    provider = new ValueProvider(@, value)
     @registry.add key, provider
     if @queues[key]
       for request in @queues[key]
