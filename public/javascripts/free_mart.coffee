@@ -1,3 +1,5 @@
+VERSION = '0.5.0'
+
 NOT_FOUND       = {}
 # will not look further if this is returned
 NOT_FOUND_FINAL = {}
@@ -367,6 +369,7 @@ class FreeMartInternal
 
   NOT_FOUND      : NOT_FOUND
   NOT_FOUND_FINAL: NOT_FOUND_FINAL
+  VERSION        : VERSION
 
 # aliases
 FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request

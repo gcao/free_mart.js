@@ -13,12 +13,6 @@
       FreeMart.register('key', 'value');
       return FreeMart.request('key').should.equal('value');
     });
-    it("value/request should work", function() {
-      FreeMart.value('key', function() {
-        return 'value';
-      });
-      return FreeMart.request('key')().should.equal('value');
-    });
     it("register/req should work", function() {
       FreeMart.register('key', 'value');
       return FreeMart.req('key').should.equal('value');
@@ -61,6 +55,23 @@
         return result = value;
       });
       return result.should.equal('value a b');
+    });
+    it("value/request should work", function() {
+      FreeMart.value('key', function() {
+        return 'value';
+      });
+      return FreeMart.request('key')().should.equal('value');
+    });
+    it("value/requestAsync should work", function() {
+      var result;
+      FreeMart.value('key', function() {
+        return 'value';
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value();
+      });
+      return result.should.equal('value');
     });
     it("requestAsync should work with promises", function() {
       var deferred, result;

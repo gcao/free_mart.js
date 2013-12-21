@@ -9,10 +9,6 @@ describe FreeMart, ->
     FreeMart.register 'key', 'value'
     FreeMart.request('key').should.equal 'value'
 
-  it "value/request should work", ->
-    FreeMart.value 'key', -> 'value'
-    FreeMart.request('key')().should.equal 'value'
-
   it "register/req should work", ->
     FreeMart.register 'key', 'value'
     FreeMart.req('key').should.equal 'value'
@@ -45,6 +41,17 @@ describe FreeMart, ->
     FreeMart.requestAsync('key', 'a', 'b').then (value) ->
       result = value
     result.should.equal 'value a b'
+
+  it "value/request should work", ->
+    FreeMart.value 'key', -> 'value'
+    FreeMart.request('key')().should.equal 'value'
+
+  it "value/requestAsync should work", ->
+    FreeMart.value 'key', -> 'value'
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value()
+    result.should.equal 'value'
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
