@@ -115,19 +115,31 @@
       deferred.resolve('value');
       return result.should.equal('value');
     });
+    it("requestAsync used for flow control - is this a good idea?", function() {
+      var result;
+      FreeMart.register('task', function() {
+        FreeMart.register('taskProcessed', true);
+      });
+      result = null;
+      FreeMart.requestAsync('taskProcessed').then(function() {
+        return result = true;
+      });
+      FreeMart.request('task');
+      return result.should.equal(true);
+    });
     it("registerAsync/requestAsync should work with promises", function() {
       var result;
       FreeMart.register('a', 'aa');
       FreeMart.registerAsync('key', function(options, arg) {
         FreeMart.requestAsync(arg).then(function(value) {
-          return options.deferred.resolve(value);
+          return options.deferred.resolve(value.toUpperCase());
         });
       });
       result = null;
       FreeMart.requestAsync('key', 'a').then(function(value) {
         return result = value;
       });
-      return result.should.equal('aa');
+      return result.should.equal('AA');
     });
     it("multiple requestAsync should work if provider is registered later", function() {
       var deferredA, requestA, resultA, resultB, resultC;

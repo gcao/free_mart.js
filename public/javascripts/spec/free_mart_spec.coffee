@@ -91,12 +91,25 @@ describe FreeMart, ->
 
     result.should.equal 'value'
 
+  it "requestAsync used for flow control - is this a good idea?", ->
+    FreeMart.register 'task', ->
+      FreeMart.register 'taskProcessed', true
+      return
+
+    result = null
+    FreeMart.requestAsync('taskProcessed').then ->
+      result = true
+
+    FreeMart.request 'task'
+
+    result.should.equal true
+
   it "registerAsync/requestAsync should work with promises", ->
     FreeMart.register 'a', 'aa'
 
     FreeMart.registerAsync 'key', (options, arg) ->
       FreeMart.requestAsync(arg).then (value) ->
-        options.deferred.resolve(value)
+        options.deferred.resolve(value.toUpperCase())
 
       # What is returned does not matter
       return
@@ -104,7 +117,7 @@ describe FreeMart, ->
     result = null
     FreeMart.requestAsync('key', 'a').then (value) ->
       result = value
-    result.should.equal 'aa'
+    result.should.equal 'AA'
 
   it "multiple requestAsync should work if provider is registered later", ->
     resultA = null
