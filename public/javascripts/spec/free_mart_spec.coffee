@@ -93,16 +93,15 @@ describe FreeMart, ->
 
   it "requestAsync used for flow control - is this a good idea?", ->
     FreeMart.register 'task', ->
-      FreeMart.register 'taskProcessed', true
-      return
+      FreeMart.register 'taskProcessed'
 
-    result = null
+    processed = false
     FreeMart.requestAsync('taskProcessed').then ->
-      result = true
+      processed = true
 
+    processed.should.equal false
     FreeMart.request 'task'
-
-    result.should.equal true
+    processed.should.equal true
 
   it "registerAsync/requestAsync should work with promises", ->
     FreeMart.register 'a', 'aa'

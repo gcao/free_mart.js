@@ -116,16 +116,17 @@
       return result.should.equal('value');
     });
     it("requestAsync used for flow control - is this a good idea?", function() {
-      var result;
+      var processed;
       FreeMart.register('task', function() {
-        FreeMart.register('taskProcessed', true);
+        return FreeMart.register('taskProcessed');
       });
-      result = null;
+      processed = false;
       FreeMart.requestAsync('taskProcessed').then(function() {
-        return result = true;
+        return processed = true;
       });
+      processed.should.equal(false);
       FreeMart.request('task');
-      return result.should.equal(true);
+      return processed.should.equal(true);
     });
     it("registerAsync/requestAsync should work with promises", function() {
       var result;
