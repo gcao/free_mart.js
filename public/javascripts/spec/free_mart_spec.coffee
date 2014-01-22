@@ -340,3 +340,11 @@ describe FreeMart, ->
     instance.register 'key', 'value'
     instance.request('key').should.equal 'value'
 
+  it "request should work with hash", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.request(key: 'key').should.equal 'value'
+
+  it "request should work with array", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.request(['key']).should.equal ['value']
+

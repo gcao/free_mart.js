@@ -398,11 +398,21 @@
       };
       return expect(func).toThrow(new Error("NOT FOUND: key"));
     });
-    return it("clone should work", function() {
+    it("clone should work", function() {
       var instance;
       instance = FreeMart.clone();
       instance.register('key', 'value');
       return instance.request('key').should.equal('value');
+    });
+    it("request should work with hash", function() {
+      FreeMart.register('key', 'value');
+      return FreeMart.request({
+        key: 'key'
+      }).should.equal('value');
+    });
+    return it("request should work with array", function() {
+      FreeMart.register('key', 'value');
+      return FreeMart.request(['key']).should.equal(['value']);
     });
   });
 
