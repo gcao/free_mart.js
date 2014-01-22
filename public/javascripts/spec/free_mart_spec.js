@@ -23,6 +23,14 @@
       });
       return FreeMart.request('key', 'a', 'b').should.equal('value a b');
     });
+    it("should work if registered value is a function", function() {
+      var value;
+      value = function() {};
+      FreeMart.register('key', function() {
+        return value;
+      });
+      return FreeMart.request('key').should.equal(value);
+    });
     it("register/request should work with promises", function() {
       var deferred, result;
       deferred = new Deferred();
@@ -42,6 +50,18 @@
         return result = value;
       });
       return result.should.equal('value');
+    });
+    it("requestAsync should work if registered value is a function", function() {
+      var result, value;
+      value = function() {};
+      FreeMart.register('key', function() {
+        return value;
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(v) {
+        return result = v;
+      });
+      return result.should.equal(value);
     });
     it("requestAsync should work with functions", function() {
       var result;
@@ -211,11 +231,22 @@
       return resultB.should.equal('bb');
     });
     it("register can take regular expression as key", function() {
-      FreeMart.register(/key/, function() {
-        return 'value';
+      var func;
+      FreeMart.register(/key/, function(options) {
+        if (options.key === 'key') {
+          return 'value';
+        } else if (options.key === 'key1') {
+          return 'value1';
+        } else {
+          return FreeMart.NOT_FOUND;
+        }
       });
       FreeMart.request('key').should.equal('value');
-      return FreeMart.request('key1').should.equal('value');
+      FreeMart.request('key1').should.equal('value1');
+      func = function() {
+        return FreeMart.request('key2');
+      };
+      return expect(func).toThrow(new Error("NOT FOUND: key2"));
     });
     it("order of registration should be kept", function() {
       FreeMart.register('key', 'first');

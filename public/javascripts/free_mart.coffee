@@ -14,10 +14,10 @@ extend = (dest, src) ->
 stringifyCache = null
 stringifyCallback = (key, value) ->
   if typeof value is "object" and value isnt null
-    
+
     # Circular reference found, discard key
     return if stringifyCache.indexOf(value) >= 0
-    
+
     # Store value in our collection
     stringifyCache.push value
 
@@ -34,13 +34,13 @@ toString = (obj...) ->
   result.replace(/"/g, "'").substring(1, result.length - 1)
 
 InUse =
-  process: (key, options, args...) ->
-    @market.log "InUse.process", key, options, args...
+  process: (options, args...) ->
+    @market.log "InUse.process", options, args...
     try
-      @in_use_keys.push key
-      @process_ key, options, args...
+      @in_use_keys.push options.key
+      @process_ options, args...
     finally
-      @in_use_keys.splice(@in_use_keys.indexOf(key), 1)
+      @in_use_keys.splice(@in_use_keys.indexOf(options.key), 1)
 
   processing: (key) ->
     @in_use_keys.indexOf(key) >= 0
@@ -79,8 +79,8 @@ class Registry
     for item in @storage
       if item.accept key then return true
 
-  process: (key, options, args...) ->
-    @market.log "Registry.process", key, options, args...
+  process: (options, args...) ->
+    @market.log "Registry.process", options, args...
 
     if @storage.length is 0
       return NO_PROVIDER
@@ -89,11 +89,11 @@ class Registry
       result = []
       processed = false
       for item in @storage
-        continue unless item.accept key
-        continue if item.processing key
+        continue unless item.accept options.key
+        continue if item.processing options.key
 
         processed = true
-        value = item.process key, options, args...
+        value = item.process options, args...
         result.push value unless value is NOT_FOUND
 
       if processed then result else NO_PROVIDER
@@ -102,11 +102,11 @@ class Registry
       processed = false
       for i in [@storage.length-1..0]
         item = @storage[i]
-        continue unless item.accept key
-        continue if item.processing key
+        continue unless item.accept options.key
+        continue if item.processing options.key
 
         processed = true
-        result = item.process key, options, args...
+        result = item.process options, args...
         if result is NOT_FOUND_FINAL
           break
         else if result isnt NOT_FOUND
@@ -133,9 +133,9 @@ class HashRegistry
       if value is provider
         delete @[key]
 
-  process_: (key, options, args...) ->
-    @market.log "HashRegistry.process_", key, options, args...
-    provider = @[key]
+  process_: (options, args...) ->
+    @market.log "HashRegistry.process_", options, args...
+    provider = @[options.key]
     return NO_PROVIDER unless provider
     try
       options.provider = provider
@@ -160,9 +160,9 @@ class FuzzyRegistry
         else
           return true if key.match(item)
 
-  process_: (key, options, args...) ->
-    @market.log "FuzzyRegistry.process_", key, options, args...
-    return NO_PROVIDER unless @accept key
+  process_: (options, args...) ->
+    @market.log "FuzzyRegistry.process_", options, args...
+    return NO_PROVIDER unless @accept options.key
     try
       options.provider = @provider
       @provider.process options, args...
@@ -238,7 +238,7 @@ class FreeMartInternal
     if @queues[key]
       for request in @queues[key]
         @log 'register - deferred request', key, request.args...
-        result = @registry.process key, {async: true}, request.args...
+        result = @registry.process {key: key, async: true}, request.args...
         @log 'register - deferred request result', result
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
@@ -271,7 +271,7 @@ class FreeMartInternal
 
   request: (key, args...) ->
     @log 'request', key, args...
-    result = @registry.process key, {}, args...
+    result = @registry.process {key: key}, args...
     if result is NO_PROVIDER
       throw "NO PROVIDER: #{key}"
     else if result is NOT_FOUND
@@ -287,7 +287,7 @@ class FreeMartInternal
 
   requestAsync: (key, args...) ->
     @log 'requestAsync', key, args...
-    result = @registry.process key, {async: true}, args...
+    result = @registry.process {key: key, async: true}, args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
       @queues[key] ||= []
@@ -319,13 +319,13 @@ class FreeMartInternal
 
   requestAll: (key, args...) ->
     @log 'requestAll', key, args...
-    @registry.process key, {all: true}, args...
+    @registry.process {key: key, all: true}, args...
 
   requestAllAsync: (key, args...) ->
     @log 'requestAllAsync', key, args...
     result = new Deferred()
 
-    requests = @registry.process key, {all: true, async: true}, args...
+    requests = @registry.process {key: key, all: true, async: true}, args...
     Deferred.when(requests...).then(
       (results...) -> result.resolve(results)
     , (results...) -> result.reject(results)

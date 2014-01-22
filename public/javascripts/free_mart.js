@@ -56,14 +56,14 @@
 
   InUse = {
     process: function() {
-      var args, key, options, _ref;
-      key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      (_ref = this.market).log.apply(_ref, ["InUse.process", key, options].concat(__slice.call(args)));
+      var args, options, _ref;
+      options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      (_ref = this.market).log.apply(_ref, ["InUse.process", options].concat(__slice.call(args)));
       try {
-        this.in_use_keys.push(key);
-        return this.process_.apply(this, [key, options].concat(__slice.call(args)));
+        this.in_use_keys.push(options.key);
+        return this.process_.apply(this, [options].concat(__slice.call(args)));
       } finally {
-        this.in_use_keys.splice(this.in_use_keys.indexOf(key), 1);
+        this.in_use_keys.splice(this.in_use_keys.indexOf(options.key), 1);
       }
     },
     processing: function(key) {
@@ -133,9 +133,9 @@
     };
 
     Registry.prototype.process = function() {
-      var args, i, item, key, options, processed, result, value, _i, _j, _len, _ref, _ref1, _ref2;
-      key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      (_ref = this.market).log.apply(_ref, ["Registry.process", key, options].concat(__slice.call(args)));
+      var args, i, item, options, processed, result, value, _i, _j, _len, _ref, _ref1, _ref2;
+      options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      (_ref = this.market).log.apply(_ref, ["Registry.process", options].concat(__slice.call(args)));
       if (this.storage.length === 0) {
         return NO_PROVIDER;
       }
@@ -145,14 +145,14 @@
         _ref1 = this.storage;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           item = _ref1[_i];
-          if (!item.accept(key)) {
+          if (!item.accept(options.key)) {
             continue;
           }
-          if (item.processing(key)) {
+          if (item.processing(options.key)) {
             continue;
           }
           processed = true;
-          value = item.process.apply(item, [key, options].concat(__slice.call(args)));
+          value = item.process.apply(item, [options].concat(__slice.call(args)));
           if (value !== NOT_FOUND) {
             result.push(value);
           }
@@ -166,14 +166,14 @@
         processed = false;
         for (i = _j = _ref2 = this.storage.length - 1; _ref2 <= 0 ? _j <= 0 : _j >= 0; i = _ref2 <= 0 ? ++_j : --_j) {
           item = this.storage[i];
-          if (!item.accept(key)) {
+          if (!item.accept(options.key)) {
             continue;
           }
-          if (item.processing(key)) {
+          if (item.processing(options.key)) {
             continue;
           }
           processed = true;
-          result = item.process.apply(item, [key, options].concat(__slice.call(args)));
+          result = item.process.apply(item, [options].concat(__slice.call(args)));
           if (result === NOT_FOUND_FINAL) {
             break;
           } else if (result !== NOT_FOUND) {
@@ -232,10 +232,10 @@
     };
 
     HashRegistry.prototype.process_ = function() {
-      var args, key, options, provider, _ref;
-      key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      (_ref = this.market).log.apply(_ref, ["HashRegistry.process_", key, options].concat(__slice.call(args)));
-      provider = this[key];
+      var args, options, provider, _ref;
+      options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      (_ref = this.market).log.apply(_ref, ["HashRegistry.process_", options].concat(__slice.call(args)));
+      provider = this[options.key];
       if (!provider) {
         return NO_PROVIDER;
       }
@@ -285,10 +285,10 @@
     };
 
     FuzzyRegistry.prototype.process_ = function() {
-      var args, key, options, _ref, _ref1;
-      key = arguments[0], options = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      (_ref = this.market).log.apply(_ref, ["FuzzyRegistry.process_", key, options].concat(__slice.call(args)));
-      if (!this.accept(key)) {
+      var args, options, _ref, _ref1;
+      options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      (_ref = this.market).log.apply(_ref, ["FuzzyRegistry.process_", options].concat(__slice.call(args)));
+      if (!this.accept(options.key)) {
         return NO_PROVIDER;
       }
       try {
@@ -385,7 +385,8 @@
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           request = _ref[_i];
           this.log.apply(this, ['register - deferred request', key].concat(__slice.call(request.args)));
-          result = (_ref1 = this.registry).process.apply(_ref1, [key, {
+          result = (_ref1 = this.registry).process.apply(_ref1, [{
+            key: key,
             async: true
           }].concat(__slice.call(request.args)));
           this.log('register - deferred request result', result);
@@ -436,7 +437,9 @@
       var args, key, result, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['request', key].concat(__slice.call(args)));
-      result = (_ref = this.registry).process.apply(_ref, [key, {}].concat(__slice.call(args)));
+      result = (_ref = this.registry).process.apply(_ref, [{
+        key: key
+      }].concat(__slice.call(args)));
       if (result === NO_PROVIDER) {
         throw "NO PROVIDER: " + key;
       } else if (result === NOT_FOUND) {
@@ -459,7 +462,8 @@
       var args, key, request, result, _base, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAsync', key].concat(__slice.call(args)));
-      result = (_ref = this.registry).process.apply(_ref, [key, {
+      result = (_ref = this.registry).process.apply(_ref, [{
+        key: key,
         async: true
       }].concat(__slice.call(args)));
       if (result === NO_PROVIDER) {
@@ -514,7 +518,8 @@
       var args, key, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAll', key].concat(__slice.call(args)));
-      return (_ref = this.registry).process.apply(_ref, [key, {
+      return (_ref = this.registry).process.apply(_ref, [{
+        key: key,
         all: true
       }].concat(__slice.call(args)));
     };
@@ -524,7 +529,8 @@
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAllAsync', key].concat(__slice.call(args)));
       result = new Deferred();
-      requests = (_ref = this.registry).process.apply(_ref, [key, {
+      requests = (_ref = this.registry).process.apply(_ref, [{
+        key: key,
         all: true,
         async: true
       }].concat(__slice.call(args)));

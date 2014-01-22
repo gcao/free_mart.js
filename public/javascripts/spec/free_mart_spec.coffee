@@ -17,6 +17,11 @@ describe FreeMart, ->
     FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
     FreeMart.request('key', 'a', 'b').should.equal 'value a b'
 
+  it "should work if registered value is a function", ->
+    value = ->
+    FreeMart.register 'key', -> value
+    FreeMart.request('key').should.equal value
+
   it "register/request should work with promises", ->
     deferred = new Deferred()
     FreeMart.register 'key', deferred
@@ -34,6 +39,16 @@ describe FreeMart, ->
     FreeMart.requestAsync('key').then (value) ->
       result = value
     result.should.equal 'value'
+
+  it "requestAsync should work if registered value is a function", ->
+    value = ->
+    FreeMart.register 'key', -> value
+
+    result = null
+    FreeMart.requestAsync('key').then (v) ->
+      result = v
+
+    result.should.equal value
 
   it "requestAsync should work with functions", ->
     FreeMart.register 'key', (_, args...) -> "value #{args.join(' ')}"
@@ -189,9 +204,15 @@ describe FreeMart, ->
     resultB.should.equal 'bb'
 
   it "register can take regular expression as key", ->
-    FreeMart.register /key/, -> 'value'
+    FreeMart.register /key/, (options) ->
+      if options.key is 'key' then 'value'
+      else if options.key is 'key1' then 'value1'
+      else FreeMart.NOT_FOUND
+
     FreeMart.request('key').should.equal 'value'
-    FreeMart.request('key1').should.equal 'value'
+    FreeMart.request('key1').should.equal 'value1'
+    func = -> FreeMart.request('key2')
+    expect(func).toThrow(new Error("NOT FOUND: key2"))
 
   it "order of registration should be kept", ->
     FreeMart.register 'key', 'first'
