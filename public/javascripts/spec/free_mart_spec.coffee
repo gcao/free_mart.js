@@ -35,9 +35,11 @@ describe FreeMart, ->
 
   it "requestAsync should work with simple value", ->
     FreeMart.register 'key', 'value'
+
     result = null
     FreeMart.requestAsync('key').then (value) ->
       result = value
+
     result.should.equal 'value'
 
   it "requestAsync should work if registered value is a function", ->
@@ -51,22 +53,28 @@ describe FreeMart, ->
     result.should.equal value
 
   it "requestAsync should work with functions", ->
-    FreeMart.register 'key', (_, args...) -> "value #{args.join(' ')}"
+    FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
+
     result = null
     FreeMart.requestAsync('key', 'a', 'b').then (value) ->
       result = value
+
     result.should.equal 'value a b'
 
   it "value/request should work", ->
-    FreeMart.value 'key', -> 'value'
-    FreeMart.request('key')().should.equal 'value'
+    value = ->
+    FreeMart.value 'key', value
+    FreeMart.request('key').should.equal value
 
   it "value/requestAsync should work", ->
-    FreeMart.value 'key', -> 'value'
+    value = ->
+    FreeMart.value 'key', value
+
     result = null
     FreeMart.requestAsync('key').then (value) ->
-      result = value()
-    result.should.equal 'value'
+      result = value
+
+    result.should.equal value
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
@@ -131,6 +139,7 @@ describe FreeMart, ->
     result = null
     FreeMart.requestAsync('key', 'a').then (value) ->
       result = value
+
     result.should.equal 'AA'
 
   it "multiple requestAsync should work if provider is registered later", ->
@@ -143,8 +152,7 @@ describe FreeMart, ->
     FreeMart.requestAsync('key', 'b').then (value) ->
       resultB = value
 
-    FreeMart.register 'key', (_, arg) ->
-      arg
+    FreeMart.register 'key', (_, arg) -> arg
 
     resultC = null
     FreeMart.requestAsync('key', 'c').then (value) ->
@@ -231,6 +239,7 @@ describe FreeMart, ->
     result = null
     FreeMart.requestAsync('key').then (value) ->
       result = value
+
     result.should.equal 'value'
 
   it "requestMulti should work", ->
@@ -256,6 +265,7 @@ describe FreeMart, ->
     FreeMart.requestMultiAsync('a', ['b', 'arg']).then (value1, value2) ->
       result1 = value1
       result2 = value2
+
     result1.should.equal 'aa'
     result2.should.equal 'arg'
 
@@ -274,6 +284,7 @@ describe FreeMart, ->
     result = null
     FreeMart.requestAllAsync('key').then (value) ->
       result = value
+
     result[0].should.equal 'first'
     result[1].should.equal 'second'
 
