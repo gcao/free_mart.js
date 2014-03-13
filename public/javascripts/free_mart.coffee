@@ -11,7 +11,7 @@ extend = (dest, src) ->
   for own key, value of src
     dest[key] = value
 
-stringifyCache = null
+stringifyCache    = null
 stringifyCallback = (key, value) ->
   if typeof value is "object" and value isnt null
 
@@ -25,7 +25,7 @@ stringifyCallback = (key, value) ->
 
 stringify = (o) ->
   stringifyCache = []
-  result = JSON.stringify(o, stringifyCallback)
+  result         = JSON.stringify(o, stringifyCallback)
   stringifyCache = null
   result
 
@@ -86,7 +86,7 @@ class Registry
       return NO_PROVIDER
 
     if options.all
-      result = []
+      result    = []
       processed = false
       for item in @storage
         continue unless item.accept options.key
@@ -106,7 +106,7 @@ class Registry
         continue if item.processing options.key
 
         processed = true
-        result = item.process options, args...
+        result    = item.process options, args...
         if result is NOT_FOUND_FINAL
           break
         else if result isnt NOT_FOUND
@@ -193,15 +193,15 @@ class Provider
       result
 
   deregister: ->
-    FreeMart.deregister @
+    @market.deregister @
 
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
 # Providers can be deregistered
 class FreeMartInternal
   constructor: (@name) ->
-    @name ||= 'Black Market'
-    @queues = {}
+    @name   ||= 'Black Market'
+    @queues   = {}
     @registry = new Registry(@)
     @disableLog()
 
@@ -280,8 +280,8 @@ class FreeMartInternal
       result
 
   createDeferredRequest = (key, args...) ->
-    request = new Deferred()
-    request.key = key
+    request      = new Deferred()
+    request.key  = key
     request.args = args
     request
 

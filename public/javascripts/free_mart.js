@@ -326,7 +326,7 @@
     };
 
     Provider.prototype.deregister = function() {
-      return FreeMart.deregister(this);
+      return this.market.deregister(this);
     };
 
     return Provider;
