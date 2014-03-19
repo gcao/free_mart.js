@@ -2,8 +2,16 @@
 (function() {
   chai.should();
 
-  describe('Pub/sub', function() {
-    return it('works', function() {});
+  describe(Busbup, function() {
+    return it('works', function() {
+      var triggered;
+      triggered = false;
+      Busbup.subscribe('event', function() {
+        return triggered = true;
+      });
+      Busbup.publish('event');
+      return triggered.should.equal(true);
+    });
   });
 
 }).call(this);
