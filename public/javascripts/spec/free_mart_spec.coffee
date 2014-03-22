@@ -131,7 +131,7 @@ describe FreeMart, ->
 
     FreeMart.registerAsync 'key', (options, arg) ->
       FreeMart.requestAsync(arg).then (value) ->
-        options.deferred.resolve(value.toUpperCase())
+        options.$deferred.resolve(value.toUpperCase())
 
       # What is returned does not matter
       return
@@ -213,8 +213,8 @@ describe FreeMart, ->
 
   it "register can take regular expression as key", ->
     FreeMart.register /key/, (options) ->
-      if options.key is 'key' then 'value'
-      else if options.key is 'key1' then 'value1'
+      if options.$key is 'key' then 'value'
+      else if options.$key is 'key1' then 'value1'
       else FreeMart.NOT_FOUND
 
     FreeMart.request('key').should.equal 'value'
@@ -320,9 +320,9 @@ describe FreeMart, ->
     func = -> FreeMart.request('key')
     expect(func).toThrow(new Error("NO PROVIDER: key"))
 
-  it "options.provider", ->
+  it "options.$provider", ->
     FreeMart.register 'key', (options) ->
-      provider = options.provider
+      provider = options.$provider
       provider.count ||= 2
       provider.count -= 1
       if provider.count <= 0 then provider.deregister()

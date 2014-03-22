@@ -37,10 +37,10 @@ InUse =
   process: (options, args...) ->
     @market.log "InUse.process", options, args...
     try
-      @in_use_keys.push options.key
+      @in_use_keys.push options.$key
       @process_ options, args...
     finally
-      @in_use_keys.splice(@in_use_keys.indexOf(options.key), 1)
+      @in_use_keys.splice(@in_use_keys.indexOf(options.$key), 1)
 
   processing: (key) ->
     @in_use_keys.indexOf(key) >= 0
@@ -86,12 +86,12 @@ class Registry
     if @storage.length is 0
       return NO_PROVIDER
 
-    if options.all
+    if options.$all
       result    = []
       processed = false
       for item in @storage
-        continue unless item.accept options.key
-        continue if item.processing options.key
+        continue unless item.accept options.$key
+        continue if item.processing options.$key
 
         processed = true
         value = item.process options, args...
@@ -103,8 +103,8 @@ class Registry
       processed = false
       for i in [@storage.length-1..0]
         item = @storage[i]
-        continue unless item.accept options.key
-        continue if item.processing options.key
+        continue unless item.accept options.$key
+        continue if item.processing options.$key
 
         processed = true
         result    = item.process options, args...
@@ -136,13 +136,13 @@ class HashRegistry
 
   process_: (options, args...) ->
     @market.log "HashRegistry.process_", options, args...
-    provider = @[options.key]
+    provider = @[options.$key]
     return NO_PROVIDER unless provider
     try
-      options.provider = provider
+      options.$provider = provider
       provider.process options, args...
     finally
-      delete options.provider
+      delete options.$provider
 
 class FuzzyRegistry
   extend @.prototype, InUse
@@ -163,12 +163,12 @@ class FuzzyRegistry
 
   process_: (options, args...) ->
     @market.log "FuzzyRegistry.process_", options, args...
-    return NO_PROVIDER unless @accept options.key
+    return NO_PROVIDER unless @accept options.$key
     try
-      options.provider = @provider
+      options.$provider = @provider
       @provider.process options, args...
     finally
-      delete options.provider
+      delete options.$provider
 
 class Provider
   constructor: (@market, @options, @value) ->
@@ -177,7 +177,7 @@ class Provider
   process: (args...) ->
     @market.log "Provider.process", args...
     result =
-      if @options.value
+      if @options.$value
         @value
       else if typeof @value is 'function'
         @value args...
@@ -185,7 +185,7 @@ class Provider
         @value
 
     options = args[0]
-    if options?.async
+    if options?.$async
       if isDeferred result
         result
       else
@@ -209,13 +209,13 @@ class FreeMartInternal
   createProvider: (options, value) ->
     value_ = value
 
-    if options.async
+    if options.$async
       value_ = (args...) ->
         result = new Deferred()
 
         if typeof value is 'function'
           options = args[0]
-          options.deferred = result
+          options.$deferred = result
           value(args...)
         else
           result.resolve(value)
@@ -239,7 +239,7 @@ class FreeMartInternal
     if @queues[key]
       for request in @queues[key]
         @log 'register - deferred request', key, request.args...
-        result = @registry.process {key: key, async: true}, request.args...
+        result = @registry.process {$key: key, $async: true}, request.args...
         @log 'register - deferred request result', result
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
@@ -260,11 +260,11 @@ class FreeMartInternal
 
   value: (key, value) ->
     @log 'value', key, value
-    @register key, {value: true}, value
+    @register key, {$value: true}, value
 
   registerAsync: (key, value) ->
     @log 'registerAsync', key, value
-    @register key, {async: true}, value
+    @register key, {$async: true}, value
 
   deregister: (provider) ->
     @log 'deregister', provider
@@ -272,7 +272,7 @@ class FreeMartInternal
 
   request: (key, args...) ->
     @log 'request', key, args...
-    result = @registry.process {key: key}, args...
+    result = @registry.process {$key: key}, args...
     if result is NO_PROVIDER
       throw "NO PROVIDER: #{key}"
     else if result is NOT_FOUND
@@ -288,7 +288,7 @@ class FreeMartInternal
 
   requestAsync: (key, args...) ->
     @log 'requestAsync', key, args...
-    result = @registry.process {key: key, async: true}, args...
+    result = @registry.process {$key: key, $async: true}, args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
       @queues[key] ||= []
@@ -320,13 +320,13 @@ class FreeMartInternal
 
   requestAll: (key, args...) ->
     @log 'requestAll', key, args...
-    @registry.process {key: key, all: true}, args...
+    @registry.process {$key: key, $all: true}, args...
 
   requestAllAsync: (key, args...) ->
     @log 'requestAllAsync', key, args...
     result = new Deferred()
 
-    requests = @registry.process {key: key, all: true, async: true}, args...
+    requests = @registry.process {$key: key, $all: true, $async: true}, args...
     Deferred.when(requests...).then(
       (results...) -> result.resolve(results)
     , (results...) -> result.reject(results)

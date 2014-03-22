@@ -148,7 +148,7 @@
       FreeMart.register('a', 'aa');
       FreeMart.registerAsync('key', function(options, arg) {
         FreeMart.requestAsync(arg).then(function(value) {
-          return options.deferred.resolve(value.toUpperCase());
+          return options.$deferred.resolve(value.toUpperCase());
         });
       });
       result = null;
@@ -228,9 +228,9 @@
     it("register can take regular expression as key", function() {
       var func;
       FreeMart.register(/key/, function(options) {
-        if (options.key === 'key') {
+        if (options.$key === 'key') {
           return 'value';
-        } else if (options.key === 'key1') {
+        } else if (options.$key === 'key1') {
           return 'value1';
         } else {
           return FreeMart.NOT_FOUND;
@@ -361,11 +361,11 @@
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
     });
-    it("options.provider", function() {
+    it("options.$provider", function() {
       var func;
       FreeMart.register('key', function(options) {
         var provider;
-        provider = options.provider;
+        provider = options.$provider;
         provider.count || (provider.count = 2);
         provider.count -= 1;
         if (provider.count <= 0) {
