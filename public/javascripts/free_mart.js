@@ -334,7 +334,7 @@
   })();
 
   FreeMartInternal = (function() {
-    var createDeferredRequest;
+    var createDeferredRequest, handleFirstArg;
 
     function FreeMartInternal(name) {
       this.name = name;
@@ -429,13 +429,34 @@
       return this.registry.removeProvider(provider);
     };
 
+    handleFirstArg = function(arg, all, async) {
+      var key, options, value;
+      options = {};
+      if (typeof arg === 'string') {
+        options.$key = arg;
+      } else {
+        for (key in arg) {
+          if (!__hasProp.call(arg, key)) continue;
+          value = arg[key];
+          if (key.indexOf('$') !== 0 || ['$key', '$all', '$async'].indexOf(key) >= 0) {
+            options[key] = value;
+          }
+        }
+      }
+      if (all) {
+        options.$all = true;
+      }
+      if (async) {
+        options.$async = true;
+      }
+      return options;
+    };
+
     FreeMartInternal.prototype.request = function() {
       var args, key, result, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['request', key].concat(__slice.call(args)));
-      result = (_ref = this.registry).process.apply(_ref, [{
-        $key: key
-      }].concat(__slice.call(args)));
+      result = (_ref = this.registry).process.apply(_ref, [handleFirstArg(key)].concat(__slice.call(args)));
       if (result === NO_PROVIDER) {
         throw "NO PROVIDER: " + key;
       } else if (result === NOT_FOUND) {
@@ -458,10 +479,7 @@
       var args, key, request, result, _base, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAsync', key].concat(__slice.call(args)));
-      result = (_ref = this.registry).process.apply(_ref, [{
-        $key: key,
-        $async: true
-      }].concat(__slice.call(args)));
+      result = (_ref = this.registry).process.apply(_ref, [handleFirstArg(key, false, true)].concat(__slice.call(args)));
       if (result === NO_PROVIDER) {
         request = createDeferredRequest.apply(null, [key].concat(__slice.call(args)));
         (_base = this.queues)[key] || (_base[key] = []);
@@ -474,50 +492,11 @@
       }
     };
 
-    FreeMartInternal.prototype.requestMulti = function() {
-      var keyAndArg, keyAndArgs, _i, _len, _results;
-      keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      this.log.apply(this, ['requestMulti'].concat(__slice.call(keyAndArgs)));
-      _results = [];
-      for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
-        keyAndArg = keyAndArgs[_i];
-        if (Object.prototype.toString.call(keyAndArg) === '[object Array]') {
-          _results.push(this.request.apply(this, keyAndArg));
-        } else {
-          _results.push(this.request(keyAndArg));
-        }
-      }
-      return _results;
-    };
-
-    FreeMartInternal.prototype.requestMultiAsync = function() {
-      var keyAndArg, keyAndArgs, requests;
-      keyAndArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      this.log.apply(this, ['requestMultiAsync'].concat(__slice.call(keyAndArgs)));
-      requests = (function() {
-        var _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = keyAndArgs.length; _i < _len; _i++) {
-          keyAndArg = keyAndArgs[_i];
-          if (typeof keyAndArg === 'object' && keyAndArg.length) {
-            _results.push(this.requestAsync.apply(this, keyAndArg));
-          } else {
-            _results.push(this.requestAsync(keyAndArg));
-          }
-        }
-        return _results;
-      }).call(this);
-      return Deferred.when.apply(Deferred, requests);
-    };
-
     FreeMartInternal.prototype.requestAll = function() {
       var args, key, _ref;
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAll', key].concat(__slice.call(args)));
-      return (_ref = this.registry).process.apply(_ref, [{
-        $key: key,
-        $all: true
-      }].concat(__slice.call(args)));
+      return (_ref = this.registry).process.apply(_ref, [handleFirstArg(key, true, false)].concat(__slice.call(args)));
     };
 
     FreeMartInternal.prototype.requestAllAsync = function() {
@@ -525,11 +504,7 @@
       key = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       this.log.apply(this, ['requestAllAsync', key].concat(__slice.call(args)));
       result = new Deferred();
-      requests = (_ref = this.registry).process.apply(_ref, [{
-        $key: key,
-        $all: true,
-        $async: true
-      }].concat(__slice.call(args)));
+      requests = (_ref = this.registry).process.apply(_ref, [handleFirstArg(key, true, true)].concat(__slice.call(args)));
       Deferred.when.apply(Deferred, requests).then(function() {
         var results;
         results = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -580,10 +555,6 @@
   FreeMartInternal.prototype.req = FreeMartInternal.prototype.request;
 
   FreeMartInternal.prototype.reqAsync = FreeMartInternal.prototype.requestAsync;
-
-  FreeMartInternal.prototype.reqMulti = FreeMartInternal.prototype.requestMulti;
-
-  FreeMartInternal.prototype.reqMultiAsync = FreeMartInternal.prototype.requestMultiAsync;
 
   FreeMartInternal.prototype.reqAll = FreeMartInternal.prototype.requestAll;
 

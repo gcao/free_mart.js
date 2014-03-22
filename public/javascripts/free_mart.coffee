@@ -270,9 +270,23 @@ class FreeMartInternal
     @log 'deregister', provider
     @registry.removeProvider(provider)
 
+  handleFirstArg = (arg, all, async) ->
+    options = {}
+    if typeof arg is 'string'
+      options.$key = arg
+    else
+      for own key, value of arg
+        if key.indexOf('$') isnt 0 or ['$key', '$all', '$async'].indexOf(key) >= 0
+          options[key] = value
+
+    if all   then options.$all   = true
+    if async then options.$async = true
+
+    options
+
   request: (key, args...) ->
     @log 'request', key, args...
-    result = @registry.process {$key: key}, args...
+    result = @registry.process handleFirstArg(key), args...
     if result is NO_PROVIDER
       throw "NO PROVIDER: #{key}"
     else if result is NOT_FOUND
@@ -288,7 +302,7 @@ class FreeMartInternal
 
   requestAsync: (key, args...) ->
     @log 'requestAsync', key, args...
-    result = @registry.process {$key: key, $async: true}, args...
+    result = @registry.process handleFirstArg(key, false, true), args...
     if result is NO_PROVIDER
       request = createDeferredRequest key, args...
       @queues[key] ||= []
@@ -299,34 +313,15 @@ class FreeMartInternal
     else
       result
 
-  requestMulti: (keyAndArgs...) ->
-    @log 'requestMulti', keyAndArgs...
-    for keyAndArg in keyAndArgs
-      if Object.prototype.toString.call(keyAndArg) is '[object Array]'
-        @request keyAndArg...
-      else
-        @request keyAndArg
-
-  requestMultiAsync: (keyAndArgs...) ->
-    @log 'requestMultiAsync', keyAndArgs...
-    requests =
-      for keyAndArg in keyAndArgs
-        if typeof keyAndArg is 'object' and keyAndArg.length
-          @requestAsync keyAndArg...
-        else
-          @requestAsync keyAndArg
-
-    Deferred.when requests...
-
   requestAll: (key, args...) ->
     @log 'requestAll', key, args...
-    @registry.process {$key: key, $all: true}, args...
+    @registry.process handleFirstArg(key, true, false), args...
 
   requestAllAsync: (key, args...) ->
     @log 'requestAllAsync', key, args...
     result = new Deferred()
 
-    requests = @registry.process {$key: key, $all: true, $async: true}, args...
+    requests = @registry.process handleFirstArg(key, true, true), args...
     Deferred.when(requests...).then(
       (results...) -> result.resolve(results)
     , (results...) -> result.reject(results)
@@ -357,8 +352,6 @@ class FreeMartInternal
 # aliases
 FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request
 FreeMartInternal.prototype.reqAsync      = FreeMartInternal.prototype.requestAsync
-FreeMartInternal.prototype.reqMulti      = FreeMartInternal.prototype.requestMulti
-FreeMartInternal.prototype.reqMultiAsync = FreeMartInternal.prototype.requestMultiAsync
 FreeMartInternal.prototype.reqAll        = FreeMartInternal.prototype.requestAll
 FreeMartInternal.prototype.reqAllAsync   = FreeMartInternal.prototype.requestAllAsync
 

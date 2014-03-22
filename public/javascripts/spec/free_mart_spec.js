@@ -274,39 +274,6 @@
       });
       return result.should.equal('value');
     });
-    it("requestMulti should work", function() {
-      var result;
-      FreeMart.register('a', 'aa');
-      FreeMart.register('b', 'bb');
-      result = FreeMart.requestMulti('a', 'b');
-      result[0].should.equal('aa');
-      return result[1].should.equal('bb');
-    });
-    it("requestMulti should work with multiple keys and args", function() {
-      var result;
-      FreeMart.register('a', 'aa');
-      FreeMart.register('b', function(_, arg) {
-        return arg;
-      });
-      result = FreeMart.requestMulti('a', ['b', 'arg']);
-      result[0].should.equal('aa');
-      return result[1].should.equal('arg');
-    });
-    it("requestMultiAsync should work", function() {
-      var result1, result2;
-      FreeMart.register('a', 'aa');
-      FreeMart.register('b', function(_, arg) {
-        return arg;
-      });
-      result1 = null;
-      result2 = null;
-      FreeMart.requestMultiAsync('a', ['b', 'arg']).then(function(value1, value2) {
-        result1 = value1;
-        return result2 = value2;
-      });
-      result1.should.equal('aa');
-      return result2.should.equal('arg');
-    });
     it("requestAll should work", function() {
       var result;
       FreeMart.register('key', 'first');
@@ -409,12 +376,19 @@
     it("request should work with hash", function() {
       FreeMart.register('key', 'value');
       return FreeMart.request({
-        key: 'key'
+        $key: 'key'
       }).should.equal('value');
     });
-    return it("request should work with array", function() {
+    return it("requestAsync should work with hash", function() {
+      var result;
       FreeMart.register('key', 'value');
-      return FreeMart.request(['key']).should.equal(['value']);
+      result = null;
+      FreeMart.requestAsync({
+        $key: 'key'
+      }).then(function(value) {
+        return result = value;
+      });
+      return result.should.equal('value');
     });
   });
 
