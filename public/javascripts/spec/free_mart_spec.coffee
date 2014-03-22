@@ -232,6 +232,11 @@ describe FreeMart, ->
     FreeMart.register 'key', -> FreeMart.request('key')
     FreeMart.request('key').should.equal 'value'
 
+  it "mix string and regular expression provider should work", ->
+    FreeMart.register 'key', 'first'
+    FreeMart.register /key/, -> 'second'
+    FreeMart.request('key').should.equal 'second'
+
   it "nested requestAsync should work", ->
     FreeMart.register 'key', 'value'
     FreeMart.register 'key', -> FreeMart.requestAsync('key')
@@ -346,8 +351,8 @@ describe FreeMart, ->
     func = -> FreeMart.request('key')
     expect(func).toThrow(new Error("NOT FOUND: key"))
 
-  it "clone should work", ->
-    instance = FreeMart.clone()
+  it "create should work", ->
+    instance = FreeMart.create()
     instance.register 'key', 'value'
     instance.request('key').should.equal 'value'
 

@@ -84,7 +84,7 @@
     Registry.prototype.add = function(key, provider) {
       var child_registry, last;
       last = this.storage.length > 0 ? this.storage[this.storage.length - 1] : void 0;
-      if (last instanceof HashRegistry && !last.accept(key)) {
+      if (last instanceof HashRegistry && typeof key === 'string' && !last.accept(key)) {
         last[key] = provider;
       } else {
         if (typeof key === 'string') {
@@ -591,7 +591,7 @@
 
   this.FreeMart = new FreeMartInternal('Free Mart');
 
-  this.FreeMart.clone = function(name) {
+  this.FreeMart.create = function(name) {
     return new FreeMartInternal(name);
   };
 

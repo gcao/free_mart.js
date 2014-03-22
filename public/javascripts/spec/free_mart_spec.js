@@ -255,6 +255,13 @@
       });
       return FreeMart.request('key').should.equal('value');
     });
+    it("mix string and regular expression provider should work", function() {
+      FreeMart.register('key', 'first');
+      FreeMart.register(/key/, function() {
+        return 'second';
+      });
+      return FreeMart.request('key').should.equal('second');
+    });
     it("nested requestAsync should work", function() {
       var result;
       FreeMart.register('key', 'value');
@@ -393,9 +400,9 @@
       };
       return expect(func).toThrow(new Error("NOT FOUND: key"));
     });
-    it("clone should work", function() {
+    it("create should work", function() {
       var instance;
-      instance = FreeMart.clone();
+      instance = FreeMart.create();
       instance.register('key', 'value');
       return instance.request('key').should.equal('value');
     });
