@@ -443,11 +443,15 @@
           }
         }
       }
-      if (all) {
-        options.$all = true;
-      }
-      if (async) {
-        options.$async = true;
+      if (all || async) {
+        delete options.$all;
+        delete options.$async;
+        if (all) {
+          options.$all = true;
+        }
+        if (async) {
+          options.$async = true;
+        }
       }
       return options;
     };

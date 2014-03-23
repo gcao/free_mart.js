@@ -279,8 +279,12 @@ class FreeMartInternal
         if key.indexOf('$') isnt 0 or ['$key', '$all', '$async'].indexOf(key) >= 0
           options[key] = value
 
-    if all   then options.$all   = true
-    if async then options.$async = true
+    # requestAll/requestAsync/requestAllAsync
+    if all or async
+      delete options.$all
+      delete options.$async
+      if all   then options.$all   = true
+      if async then options.$async = true
 
     options
 
