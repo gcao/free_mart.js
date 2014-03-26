@@ -1,19 +1,20 @@
 VERSION = '0.1.0'
 
-class @Busbup
-  callbacks = {}
+class BusbupInternal
+  constructor: ->
+    @callbacks = {}
 
   version: VERSION
 
-  subscribe: (event, callback) ->
-    if callbacks.hasOwnProperty(event)
-      callbacks[event].push callback
+  subscribe: (event, callback) =>
+    if @callbacks.hasOwnProperty(event)
+      @callbacks[event].push callback
     else
-      callbacks[event] = [callback]
+      @callbacks[event] = [callback]
 
-  publish: (event, args...) ->
+  publish: (event, args...) =>
     # check callbacks before triggering the event
-    myCallbacks = callbacks[event]
+    myCallbacks = @callbacks[event]
 
     if myCallbacks and myCallbacks.length > 0
       for callback, i in myCallbacks by -1
@@ -26,17 +27,21 @@ class @Busbup
       else
         delete callbacks[event]
 
-  unsubscribe: (event, callback) ->
-    if callbacks[event]
-      index = callbacks[event].indexOf(callback)
+  unsubscribe: (event, callback) =>
+    if @callbacks[event]
+      index = @callbacks[event].indexOf(callback)
       if index >= 0
-        callbacks[event].splice index, 1
+        @callbacks[event].splice index, 1
 
-      if callbacks[event].length is 0
-        delete callbacks[event]
+      if @callbacks[event].length is 0
+        delete @callbacks[event]
 
-  instance     = new @
-  @subscribe   = instance.subscribe
-  @publish     = instance.publish
-  @unsubscribe = instance.unsubscribe
+@Busbup = new BusbupInternal
+@Busbup.create = (owner) ->
+  instance = new BusbupInternal
+  if owner
+    owner.subscribe   = instance.subscribe
+    owner.publish     = instance.publish
+    owner.unsubscribe = instance.unsubscribe
+  instance
 

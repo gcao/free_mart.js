@@ -3,13 +3,24 @@
   chai.should();
 
   describe(Busbup, function() {
-    return it('works', function() {
+    it('works', function() {
       var triggered;
       triggered = false;
       Busbup.subscribe('event', function() {
         return triggered = true;
       });
       Busbup.publish('event');
+      return triggered.should.equal(true);
+    });
+    return it('attaches to object', function() {
+      var o, triggered;
+      o = {};
+      Busbup.create(o);
+      triggered = false;
+      o.subscribe('event', function() {
+        return triggered = true;
+      });
+      o.publish('event');
       return triggered.should.equal(true);
     });
   });
