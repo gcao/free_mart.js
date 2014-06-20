@@ -76,6 +76,24 @@ describe FreeMart, ->
 
     result.should.equal value
 
+  it "service/request should work", ->
+    FreeMart.service 'key', ->
+      @value = 'value'
+      return
+
+    result = FreeMart.request('key')
+    result.value.should.equal 'value'
+
+  it "service/requestAsync should work", ->
+    FreeMart.service 'key', ->
+      @value = 'value'
+      return
+
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.value.should.equal 'value'
+
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
     FreeMart.register 'key', deferred

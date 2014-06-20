@@ -174,11 +174,32 @@ class Provider
   constructor: (@market, @options, @value) ->
     @market.log "Provider.constructor", @options, @value
 
+    if @options.$async and @options.$type
+      console.log "Bad provider: $async=#{@options.$async}, $type=#{@options.$type}"
+
+    if @options.$async
+      value = @value
+      @value = (args...) ->
+        result = new Deferred()
+
+        if typeof value is 'function'
+          options = args[0]
+          options.$deferred = result
+          value(args...)
+        else
+          result.resolve(value)
+
+        result
+
+    return
+
   process: (args...) ->
     @market.log "Provider.process", args...
     result =
-      if @options.$value
+      if @options.$type is 'value'
         @value
+      else if @options.$type is 'service' and typeof @value is 'function'
+        new @value args...
       else if typeof @value is 'function'
         @value args...
       else
@@ -206,24 +227,6 @@ class FreeMartInternal
     @registry = new Registry(@)
     @disableLog()
 
-  createProvider: (options, value) ->
-    value_ = value
-
-    if options.$async
-      value_ = (args...) ->
-        result = new Deferred()
-
-        if typeof value is 'function'
-          options = args[0]
-          options.$deferred = result
-          value(args...)
-        else
-          result.resolve(value)
-
-        result
-
-    new Provider(@, options, value_)
-
   register: (key, options, value) ->
     @log 'register', key, options, value
 
@@ -233,7 +236,7 @@ class FreeMartInternal
       value = options
       options = {}
 
-    provider = @createProvider options, value
+    provider = new Provider(@, options, value)
     @registry.add key, provider
 
     if @queues[key]
@@ -260,7 +263,11 @@ class FreeMartInternal
 
   value: (key, value) ->
     @log 'value', key, value
-    @register key, {$value: true}, value
+    @register key, {$type: 'value'}, value
+
+  service: (key, value) ->
+    @log 'service', key, value
+    @register key, {$type: 'service'}, value
 
   registerAsync: (key, value) ->
     @log 'registerAsync', key, value

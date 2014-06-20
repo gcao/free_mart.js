@@ -88,6 +88,25 @@
       });
       return result.should.equal(value);
     });
+    it("service/request should work", function() {
+      var result;
+      FreeMart.service('key', function() {
+        this.value = 'value';
+      });
+      result = FreeMart.request('key');
+      return result.value.should.equal('value');
+    });
+    it("service/requestAsync should work", function() {
+      var result;
+      FreeMart.service('key', function() {
+        this.value = 'value';
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      return result.value.should.equal('value');
+    });
     it("requestAsync should work with promises", function() {
       var deferred, result;
       deferred = new Deferred();

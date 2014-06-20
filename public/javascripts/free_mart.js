@@ -306,13 +306,37 @@
       this.options = options;
       this.value = value;
       this.market.log("Provider.constructor", this.options, this.value);
+      if (this.options.$async && this.options.$type) {
+        console.log("Bad provider: $async=" + this.options.$async + ", $type=" + this.options.$type);
+      }
+      if (this.options.$async) {
+        value = this.value;
+        this.value = function() {
+          var args, result;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          result = new Deferred();
+          if (typeof value === 'function') {
+            options = args[0];
+            options.$deferred = result;
+            value.apply(null, args);
+          } else {
+            result.resolve(value);
+          }
+          return result;
+        };
+      }
+      return;
     }
 
     Provider.prototype.process = function() {
       var args, options, result, _ref;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       (_ref = this.market).log.apply(_ref, ["Provider.process"].concat(__slice.call(args)));
-      result = this.options.$value ? this.value : typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
+      result = this.options.$type === 'value' ? this.value : this.options.$type === 'service' && typeof this.value === 'function' ? (function(func, args, ctor) {
+        ctor.prototype = func.prototype;
+        var child = new ctor, result = func.apply(child, args);
+        return Object(result) === result ? result : child;
+      })(this.value, args, function(){}) : typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
       options = args[0];
       if (options != null ? options.$async : void 0) {
         if (isDeferred(result)) {
@@ -344,27 +368,6 @@
       this.disableLog();
     }
 
-    FreeMartInternal.prototype.createProvider = function(options, value) {
-      var value_;
-      value_ = value;
-      if (options.$async) {
-        value_ = function() {
-          var args, result;
-          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          result = new Deferred();
-          if (typeof value === 'function') {
-            options = args[0];
-            options.$deferred = result;
-            value.apply(null, args);
-          } else {
-            result.resolve(value);
-          }
-          return result;
-        };
-      }
-      return new Provider(this, options, value_);
-    };
-
     FreeMartInternal.prototype.register = function(key, options, value) {
       var func, provider, request, result, _i, _len, _ref, _ref1;
       this.log('register', key, options, value);
@@ -374,7 +377,7 @@
         value = options;
         options = {};
       }
-      provider = this.createProvider(options, value);
+      provider = new Provider(this, options, value);
       this.registry.add(key, provider);
       if (this.queues[key]) {
         _ref = this.queues[key];
@@ -413,7 +416,14 @@
     FreeMartInternal.prototype.value = function(key, value) {
       this.log('value', key, value);
       return this.register(key, {
-        $value: true
+        $type: 'value'
+      }, value);
+    };
+
+    FreeMartInternal.prototype.service = function(key, value) {
+      this.log('service', key, value);
+      return this.register(key, {
+        $type: 'service'
       }, value);
     };
 
