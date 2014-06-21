@@ -361,11 +361,14 @@ class FreeMartInternal
   VERSION        : VERSION
 
 # aliases
+FreeMartInternal.prototype.reg           = FreeMartInternal.prototype.register
+FreeMartInternal.prototype.regAsync      = FreeMartInternal.prototype.registerAsync
 FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request
 FreeMartInternal.prototype.reqAsync      = FreeMartInternal.prototype.requestAsync
 FreeMartInternal.prototype.reqAll        = FreeMartInternal.prototype.requestAll
 FreeMartInternal.prototype.reqAllAsync   = FreeMartInternal.prototype.requestAllAsync
+FreeMartInternal.prototype.dereg         = FreeMartInternal.prototype.deregister
 
-@FreeMart       = new FreeMartInternal('Free Mart')
+@FreeMart        = new FreeMartInternal('Free Mart')
 @FreeMart.create = (name) -> new FreeMartInternal(name)
 
