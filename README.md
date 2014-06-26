@@ -1,2 +1,2 @@
-This is an experimentation on provider/customer communication system.
+This is an experimentation on provider/consumer communication system.
 
