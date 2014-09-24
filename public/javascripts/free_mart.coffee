@@ -273,10 +273,6 @@ class FreeMartInternal
     @log 'registerAsync', key, value
     @register key, {$async: true}, value
 
-  deregister: (provider) ->
-    @log 'deregister', provider
-    @registry.removeProvider(provider)
-
   handleFirstArg = (arg, all, async) ->
     options = {}
     if typeof arg is 'string'
@@ -367,7 +363,6 @@ FreeMartInternal.prototype.req           = FreeMartInternal.prototype.request
 FreeMartInternal.prototype.reqAsync      = FreeMartInternal.prototype.requestAsync
 FreeMartInternal.prototype.reqAll        = FreeMartInternal.prototype.requestAll
 FreeMartInternal.prototype.reqAllAsync   = FreeMartInternal.prototype.requestAllAsync
-FreeMartInternal.prototype.dereg         = FreeMartInternal.prototype.deregister
 
 @FreeMart        = new FreeMartInternal('Free Mart')
 @FreeMart.create = (name) -> new FreeMartInternal(name)
