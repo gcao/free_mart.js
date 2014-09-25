@@ -88,24 +88,58 @@
       });
       return result.should.equal(value);
     });
-    it("service/request should work", function() {
+    it("factory/request should work", function() {
       var result;
-      FreeMart.service('key', function() {
-        this.value = 'value';
+      FreeMart.factory('key', function() {
+        return this.value = 'value';
       });
       result = FreeMart.request('key');
       return result.value.should.equal('value');
     });
-    it("service/requestAsync should work", function() {
+    it("factory/requestAsync should work", function() {
       var result;
-      FreeMart.service('key', function() {
-        this.value = 'value';
+      FreeMart.factory('key', function() {
+        return this.value = 'value';
       });
       result = null;
       FreeMart.requestAsync('key').then(function(value) {
         return result = value;
       });
       return result.value.should.equal('value');
+    });
+    it("provider/request should work", function() {
+      FreeMart.provider({
+        $accept: 'key',
+        $get: 'value'
+      });
+      return FreeMart.request('key').should.equal('value');
+    });
+    it("provider/requestAsync should work", function() {
+      var result;
+      FreeMart.provider({
+        $accept: 'key',
+        $get: 'value'
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      return result.should.equal('value');
+    });
+    it("register a raw provider should work", function() {
+      FreeMart.register('key', {
+        $get: function() {
+          return 'value';
+        }
+      });
+      return FreeMart.request('key').should.equal('value');
+    });
+    it("register should take a function for the key", function() {
+      FreeMart.register((function() {
+        return true;
+      }), 'value');
+      FreeMart.request('one').should.equal('value');
+      return FreeMart.request('two').should.equal('value');
     });
     it("requestAsync should work with promises", function() {
       var deferred, result;
@@ -312,15 +346,6 @@
       result[0].should.equal('first');
       return result[1].should.equal('second');
     });
-    it("deregister should work", function() {
-      var func, provider;
-      provider = FreeMart.register('key', 'value');
-      FreeMart.deregister(provider);
-      func = function() {
-        return FreeMart.request('key');
-      };
-      return expect(func).toThrow(new Error("NO PROVIDER: key"));
-    });
     it("provider.deregister should work", function() {
       var func, provider;
       provider = FreeMart.register('key', 'value');
@@ -365,6 +390,20 @@
         return FreeMart.request('key');
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key"));
+    });
+    it("options.$provider should not be available in callbacks if they are invoked after the value function returns", function() {
+      var deferred;
+      deferred = new Deferred();
+      FreeMart.register('key', function(options) {
+        var provider;
+        provider = options.$provider;
+        return deferred.then(function() {
+          provider.should.exist;
+          return (options.$provider === void 0).should.be["true"];
+        });
+      });
+      FreeMart.request('key');
+      return deferred.resolve('value');
     });
     it("defining provider value separately should work", function() {
       var provider;

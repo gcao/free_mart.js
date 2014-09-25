@@ -76,23 +76,47 @@ describe FreeMart, ->
 
     result.should.equal value
 
-  it "service/request should work", ->
-    FreeMart.service 'key', ->
+  it "factory/request should work", ->
+    FreeMart.factory 'key', ->
       @value = 'value'
-      return
 
     result = FreeMart.request('key')
     result.value.should.equal 'value'
 
-  it "service/requestAsync should work", ->
-    FreeMart.service 'key', ->
+  it "factory/requestAsync should work", ->
+    FreeMart.factory 'key', ->
       @value = 'value'
-      return
 
     result = null
     FreeMart.requestAsync('key').then (value) ->
       result = value
     result.value.should.equal 'value'
+
+  it "provider/request should work", ->
+    FreeMart.provider
+      $accept: 'key'
+      $get:    'value'
+    FreeMart.request('key').should.equal 'value'
+
+  it "provider/requestAsync should work", ->
+    FreeMart.provider
+      $accept: 'key'
+      $get:    'value'
+
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+
+    result.should.equal 'value'
+
+  it "register a raw provider should work", ->
+    FreeMart.register 'key', $get: -> 'value'
+    FreeMart.request('key').should.equal 'value'
+
+  it "register should take a function for the key", ->
+    FreeMart.register (-> true), 'value'
+    FreeMart.request('one').should.equal 'value'
+    FreeMart.request('two').should.equal 'value'
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
@@ -319,6 +343,19 @@ describe FreeMart, ->
 
     func = -> FreeMart.request('key')
     expect(func).toThrow(new Error("NO PROVIDER: key"))
+
+  it "options.$provider should not be available in callbacks if they are invoked after the value function returns", ->
+    deferred = new Deferred()
+    FreeMart.register 'key', (options) ->
+      provider = options.$provider
+      deferred.then ->
+        # This callback is run after the parent function returns because deferred
+        # is resolved later
+        provider.should.exist
+        (options.$provider is undefined).should.be.true
+
+    FreeMart.request('key')
+    deferred.resolve 'value'
 
   it "defining provider value separately should work", ->
     provider = FreeMart.register 'key'

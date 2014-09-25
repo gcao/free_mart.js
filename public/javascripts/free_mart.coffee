@@ -61,6 +61,8 @@ class Registry
       if typeof key is 'string'
         child_registry = new HashRegistry(@market)
         child_registry[key] = provider
+      else if typeof key is 'function'
+        child_registry = new CallbackRegistry(@market, key, provider)
       else
         child_registry = new FuzzyRegistry(@market, key, provider)
       @storage.push child_registry
@@ -170,6 +172,25 @@ class FuzzyRegistry
     finally
       delete options.$provider
 
+class CallbackRegistry
+  extend @.prototype, InUse
+
+  constructor: (@market, @callback, @provider) ->
+    @in_use_keys = []
+
+  accept: (key) ->
+    @market.log "CallbackRegistry.accept", key
+    @callback(key)
+
+  process_: (options, args...) ->
+    @market.log "CallbackRegistry.process_", options, args...
+    return NO_PROVIDER unless @accept options.$key
+    try
+      options.$provider = @provider
+      @provider.process options, args...
+    finally
+      delete options.$provider
+
 class Provider
   constructor: (@market, @options, @value) ->
     @market.log "Provider.constructor", @options, @value
@@ -198,8 +219,10 @@ class Provider
     result =
       if @options.$type is 'value'
         @value
-      else if @options.$type is 'service' and typeof @value is 'function'
+      else if @options.$type is 'factory' and typeof @value is 'function'
         new @value args...
+      else if (typeof @value is 'object' or typeof @value is 'function') and typeof @value.$get is 'function'
+        @value.$get.bind(@value)(args...)
       else if typeof @value is 'function'
         @value args...
       else
@@ -215,7 +238,7 @@ class Provider
       result
 
   deregister: ->
-    @market.deregister @
+    @market.registry.removeProvider @
 
 # Registrations are stored based on order
 # fuzzy => hash => fuzzy
@@ -265,9 +288,26 @@ class FreeMartInternal
     @log 'value', key, value
     @register key, {$type: 'value'}, value
 
-  service: (key, value) ->
-    @log 'service', key, value
-    @register key, {$type: 'service'}, value
+  factory: (key, value) ->
+    @log 'factory', key, value
+    @register key, {$type: 'factory'}, value
+
+  provider: (provider) ->
+    @log 'provider', provider
+    unless provider.hasOwnProperty('$accept') and provider.hasOwnProperty('$get')
+      throw 'Invalid provider: $accept and $get are required'
+
+    key = provider.$accept
+    key = key.bind(provider) if typeof key is 'function'
+
+    options = {}
+    options.$async = provider.$async if provider.hasOwnProperty '$async'
+    options.$type  = provider.$type  if provider.hasOwnProperty '$type'
+
+    value = provider.$get
+    value = value.bind(provider) if typeof value is 'function'
+
+    @register key, options, value
 
   registerAsync: (key, value) ->
     @log 'registerAsync', key, value
