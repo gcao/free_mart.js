@@ -63,6 +63,8 @@ class Registry
         child_registry[key] = provider
       else if typeof key is 'function'
         child_registry = new CallbackRegistry(@market, key, provider)
+      else if typeof key is 'undefined'
+        child_registry = new SimpleRegistry(@market, provider)
       else
         child_registry = new FuzzyRegistry(@market, key, provider)
       @storage.push child_registry
@@ -92,12 +94,16 @@ class Registry
       result    = []
       processed = false
       for item in @storage
-        continue unless item.accept options.$key
-        continue if item.processing options.$key
+        if item.accept
+          continue unless item.accept options.$key
+          continue if item.processing options.$key
 
-        processed = true
-        value = item.process options, args...
-        result.push value unless value is NOT_FOUND
+          processed = true
+          value = item.process options, args...
+          result.push value unless value is NOT_FOUND
+        else
+          # the provider uses one function to match key and return result
+          # TODO
 
       if processed then result else NO_PROVIDER
 
@@ -105,15 +111,27 @@ class Registry
       processed = false
       for i in [@storage.length-1..0]
         item = @storage[i]
-        continue unless item.accept options.$key
         continue if item.processing options.$key
 
-        processed = true
-        result    = item.process options, args...
-        if result is NOT_FOUND_FINAL
-          break
-        else if result isnt NOT_FOUND
-          return result
+        if item.accept
+          continue unless item.accept options.$key
+
+          processed = true
+          result    = item.process options, args...
+          if result is NOT_FOUND_FINAL
+            break
+          else if result isnt NOT_FOUND
+            return result
+
+        else
+          # the provider uses one function to match key and return result
+          result = item.process options, args...
+          if result is NOT_FOUND_FINAL
+            processed = true
+            break
+          else if result isnt NOT_FOUND
+            processed = true
+            return result
 
       if processed then NOT_FOUND else NO_PROVIDER
 
@@ -191,6 +209,20 @@ class CallbackRegistry
     finally
       delete options.$provider
 
+class SimpleRegistry
+  extend @.prototype, InUse
+
+  constructor: (@market, @provider) ->
+    @in_use_keys = []
+
+  process_: (options, args...) ->
+    @market.log "SimpleRegistry.process_", options, args...
+    try
+      options.$provider = @provider
+      @provider.process options, args...
+    finally
+      delete options.$provider
+
 class Provider
   constructor: (@market, @options, @value) ->
     @market.log "Provider.constructor", @options, @value
@@ -222,7 +254,7 @@ class Provider
       else if @options.$type is 'factory' and typeof @value is 'function'
         new @value args...
       else if (typeof @value is 'object' or typeof @value is 'function') and typeof @value.$get is 'function'
-        @value.$get.bind(@value)(args...)
+        @value.$get(args...)
       else if typeof @value is 'function'
         @value args...
       else
@@ -270,16 +302,13 @@ class FreeMartInternal
         if result is NOT_FOUND
           throw "NOT FOUND: #{key}"
         else if isDeferred result
-          # Use a closure to ensure request in the callback is not changed
-          # by the iterator to another
-          func = (req) ->
-            result.then(
-              (v...) -> req.resolve(v...)
-            , (v...) -> req.reject(v...)
-            )
-          func(request)
+          do (request) ->
+            successCallback = (v...) -> request.resolve(v...)
+            failureCallback = (v...) -> request.reject(v...)
+            result.then successCallback, failureCallback
         else
           request.resolve(result)
+
       delete @queues[key]
 
     provider
@@ -294,6 +323,10 @@ class FreeMartInternal
 
   provider: (provider) ->
     @log 'provider', provider
+
+    if typeof provider is 'function'
+      return @register undefined, {}, provider
+
     unless provider.hasOwnProperty('$accept') and provider.hasOwnProperty('$get')
       throw 'Invalid provider: $accept and $get are required'
 

@@ -114,6 +114,31 @@
       });
       return FreeMart.request('key').should.equal('value');
     });
+    it("one-function provider/request should work", function() {
+      FreeMart.provider(function(options) {
+        if (options.$key === 'key') {
+          return 'value';
+        } else {
+          return FreeMart.NOT_FOUND;
+        }
+      });
+      return FreeMart.request('key').should.equal('value');
+    });
+    it("one-function provider/requestAsync should work", function() {
+      var result;
+      FreeMart.provider(function(options) {
+        if (options.$key === 'key') {
+          return 'value';
+        } else {
+          return FreeMart.NOT_FOUND;
+        }
+      });
+      result = null;
+      FreeMart.requestAsync('key').then(function(value) {
+        return result = value;
+      });
+      return result.should.equal('value');
+    });
     it("provider/requestAsync should work", function() {
       var result;
       FreeMart.provider({

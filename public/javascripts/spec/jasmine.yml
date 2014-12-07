@@ -13,6 +13,8 @@
 src_files:
   - "javascripts/*.coffee"
   - "javascripts/chai.js"
+  # http://stackoverflow.com/questions/24224323/bind-polyfill-for-phantomjs
+  - "javascripts/spec/es5-shim.js"
 
 # stylesheets
 #

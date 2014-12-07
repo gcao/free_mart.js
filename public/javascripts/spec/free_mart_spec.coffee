@@ -96,7 +96,29 @@ describe FreeMart, ->
     FreeMart.provider
       $accept: 'key'
       $get:    'value'
+
     FreeMart.request('key').should.equal 'value'
+
+  it "one-function provider/request should work", ->
+    FreeMart.provider (options) ->
+      if options.$key is 'key'
+        'value'
+      else
+        FreeMart.NOT_FOUND
+
+    FreeMart.request('key').should.equal 'value'
+
+  it "one-function provider/requestAsync should work", ->
+    FreeMart.provider (options) ->
+      if options.$key is 'key'
+        'value'
+      else
+        return FreeMart.NOT_FOUND
+
+    result = null
+    FreeMart.requestAsync('key').then (value) ->
+      result = value
+    result.should.equal 'value'
 
   it "provider/requestAsync should work", ->
     FreeMart.provider
