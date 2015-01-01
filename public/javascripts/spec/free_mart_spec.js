@@ -159,7 +159,7 @@
       });
       return FreeMart.request('key').should.equal('value');
     });
-    it("register can take function as key", function() {
+    it("register should take function as key", function() {
       var callback, func;
       callback = function(key) {
         return key === 'key';
@@ -308,7 +308,7 @@
       resultA.should.equal('aa');
       return resultB.should.equal('bb');
     });
-    it("register can take regular expression as key", function() {
+    it("register should take regular expression as key", function() {
       var func;
       FreeMart.register(/key/, function(options) {
         if (options.$key === 'key') {

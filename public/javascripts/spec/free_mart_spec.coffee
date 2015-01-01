@@ -135,7 +135,7 @@ describe FreeMart, ->
     FreeMart.register 'key', $get: -> 'value'
     FreeMart.request('key').should.equal 'value'
 
-  it "register can take function as key", ->
+  it "register should take function as key", ->
     callback = (key) -> key is 'key'
     FreeMart.register callback, 'value'
 
@@ -278,7 +278,7 @@ describe FreeMart, ->
     resultA.should.equal 'aa'
     resultB.should.equal 'bb'
 
-  it "register can take regular expression as key", ->
+  it "register should take regular expression as key", ->
     FreeMart.register /key/, (options) ->
       if options.$key is 'key' then 'value'
       else if options.$key is 'key1' then 'value1'
