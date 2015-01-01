@@ -135,10 +135,13 @@ describe FreeMart, ->
     FreeMart.register 'key', $get: -> 'value'
     FreeMart.request('key').should.equal 'value'
 
-  it "register should take a function for the key", ->
-    FreeMart.register (-> true), 'value'
-    FreeMart.request('one').should.equal 'value'
-    FreeMart.request('two').should.equal 'value'
+  it "register can take function as key", ->
+    callback = (key) -> key is 'key'
+    FreeMart.register callback, 'value'
+
+    FreeMart.request('key').should.equal 'value'
+    func = -> FreeMart.request('key1')
+    expect(func).toThrow(new Error("NO PROVIDER: key1"))
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
@@ -285,14 +288,6 @@ describe FreeMart, ->
     FreeMart.request('key1').should.equal 'value1'
     func = -> FreeMart.request('key2')
     expect(func).toThrow(new Error("NOT FOUND: key2"))
-
-  it "register can take function as key", ->
-    callback = (key) -> key is 'key'
-    FreeMart.register callback, 'value'
-
-    FreeMart.request('key').should.equal 'value'
-    func = -> FreeMart.request('key1')
-    expect(func).toThrow(new Error("NO PROVIDER: key1"))
 
   it "order of registration should be kept", ->
     FreeMart.register 'key', 'first'
