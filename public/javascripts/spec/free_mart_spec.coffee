@@ -113,7 +113,7 @@ describe FreeMart, ->
       if options.$key is 'key'
         'value'
       else
-        return FreeMart.NOT_FOUND
+        FreeMart.NOT_FOUND
 
     result = null
     FreeMart.requestAsync('key').then (value) ->
@@ -286,6 +286,14 @@ describe FreeMart, ->
     func = -> FreeMart.request('key2')
     expect(func).toThrow(new Error("NOT FOUND: key2"))
 
+  it "register can take function as key", ->
+    callback = (key) -> key is 'key'
+    FreeMart.register callback, 'value'
+
+    FreeMart.request('key').should.equal 'value'
+    func = -> FreeMart.request('key1')
+    expect(func).toThrow(new Error("NO PROVIDER: key1"))
+
   it "order of registration should be kept", ->
     FreeMart.register 'key', 'first'
     FreeMart.register 'key', 'second'
@@ -412,3 +420,4 @@ describe FreeMart, ->
       result = value
 
     result.should.equal 'value'
+

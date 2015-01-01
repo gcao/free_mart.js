@@ -321,6 +321,18 @@
       };
       return expect(func).toThrow(new Error("NOT FOUND: key2"));
     });
+    it("register can take function as key", function() {
+      var callback, func;
+      callback = function(key) {
+        return key === 'key';
+      };
+      FreeMart.register(callback, 'value');
+      FreeMart.request('key').should.equal('value');
+      func = function() {
+        return FreeMart.request('key1');
+      };
+      return expect(func).toThrow(new Error("NO PROVIDER: key1"));
+    });
     it("order of registration should be kept", function() {
       FreeMart.register('key', 'first');
       FreeMart.register('key', 'second');
