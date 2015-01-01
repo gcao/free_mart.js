@@ -78,7 +78,8 @@
     }
 
     Registry.prototype.clear = function() {
-      return this.storage = [];
+      this.storage = [];
+      return delete this["default"];
     };
 
     Registry.prototype.add = function(key, provider) {
@@ -140,6 +141,9 @@
       options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       (_ref = this.market).log.apply(_ref, ["Registry.process", options].concat(__slice.call(args)));
       if (this.storage.length === 0) {
+        if (this["default"]) {
+          return this["default"].apply(this, [options].concat(__slice.call(args)));
+        }
         return NO_PROVIDER;
       }
       if (options.$all) {
@@ -197,6 +201,9 @@
               return result;
             }
           }
+        }
+        if (this["default"]) {
+          return this["default"].apply(this, [options].concat(__slice.call(args)));
         }
         if (processed) {
           return NOT_FOUND;
@@ -532,6 +539,10 @@
         value = value.bind(provider);
       }
       return this.register(key, options, value);
+    };
+
+    FreeMartInternal.prototype["default"] = function(callback) {
+      return this.registry["default"] = callback;
     };
 
     FreeMartInternal.prototype.registerAsync = function(key, value) {

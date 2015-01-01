@@ -21,7 +21,7 @@
       });
       return FreeMart.request('key', 'a', 'b').should.equal('value a b');
     });
-    it("should work if registered value is a function", function() {
+    it("register/request should work if registered value is a function", function() {
       var value;
       value = function() {};
       FreeMart.register('key', function() {
@@ -171,6 +171,12 @@
       };
       return expect(func).toThrow(new Error("NO PROVIDER: key1"));
     });
+    it("default should work", function() {
+      FreeMart["default"](function(options) {
+        return "default(" + options.$key + ")";
+      });
+      return FreeMart.request('key').should.equal('default(key)');
+    });
     it("requestAsync should work with promises", function() {
       var deferred, result;
       deferred = new Deferred();
@@ -225,6 +231,21 @@
       processed.should.equal(false);
       FreeMart.request('task');
       return processed.should.equal(true);
+    });
+    it("Used as router - is this a good idea?", function() {
+      FreeMart["default"](function() {
+        return "404: Not Found";
+      });
+      FreeMart.register("/", 'root');
+      FreeMart.register("/first", 'first page');
+      FreeMart.register("/second", function(_, params) {
+        return "second page: " + (JSON.stringify(params));
+      });
+      FreeMart.request("/").should.equal('root');
+      FreeMart.request("/first").should.equal('first page');
+      return FreeMart.request("/second", {
+        name: "John"
+      }).should.equal('second page: {"name":"John"}');
     });
     it("registerAsync/requestAsync should work with promises", function() {
       var result;

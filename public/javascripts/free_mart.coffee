@@ -51,6 +51,7 @@ class Registry
 
   clear: ->
     @storage = []
+    delete @default
 
   add: (key, provider) ->
     last = if @storage.length > 0 then @storage[@storage.length - 1]
@@ -88,6 +89,9 @@ class Registry
     @market.log "Registry.process", options, args...
 
     if @storage.length is 0
+      if @default
+        return @default(options, args...)
+
       return NO_PROVIDER
 
     if options.$all
@@ -132,6 +136,9 @@ class Registry
           else if result isnt NOT_FOUND
             processed = true
             return result
+
+      if @default
+        return @default(options, args...)
 
       if processed then NOT_FOUND else NO_PROVIDER
 
@@ -341,6 +348,9 @@ class FreeMartInternal
     value = value.bind(provider) if typeof value is 'function'
 
     @register key, options, value
+
+  default: (callback) ->
+    @registry.default = callback
 
   registerAsync: (key, value) ->
     @log 'registerAsync', key, value

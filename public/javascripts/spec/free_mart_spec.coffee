@@ -17,7 +17,7 @@ describe FreeMart, ->
     FreeMart.register 'key', (_, arg1, arg2) -> "value #{arg1} #{arg2}"
     FreeMart.request('key', 'a', 'b').should.equal 'value a b'
 
-  it "should work if registered value is a function", ->
+  it "register/request should work if registered value is a function", ->
     value = ->
     FreeMart.register 'key', -> value
     FreeMart.request('key').should.equal value
@@ -143,6 +143,11 @@ describe FreeMart, ->
     func = -> FreeMart.request('key1')
     expect(func).toThrow(new Error("NO PROVIDER: key1"))
 
+  it "default should work", ->
+    FreeMart.default (options) -> "default(#{options.$key})"
+
+    FreeMart.request('key').should.equal 'default(key)'
+
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
     FreeMart.register 'key', deferred
@@ -192,6 +197,16 @@ describe FreeMart, ->
     processed.should.equal false
     FreeMart.request 'task'
     processed.should.equal true
+
+  it "Used as router - is this a good idea?", ->
+    FreeMart.default     -> "404: Not Found"
+    FreeMart.register "/"      , 'root'
+    FreeMart.register "/first" , 'first page'
+    FreeMart.register "/second", (_, params) -> "second page: #{JSON.stringify(params)}"
+
+    FreeMart.request("/").should.equal 'root'
+    FreeMart.request("/first").should.equal 'first page'
+    FreeMart.request("/second", name: "John").should.equal 'second page: {"name":"John"}'
 
   it "registerAsync/requestAsync should work with promises", ->
     FreeMart.register 'a', 'aa'
