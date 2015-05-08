@@ -72,6 +72,23 @@
       });
       return result.should.equal('value a b');
     });
+    it("request should work with hash", function() {
+      FreeMart.register('key', 'value');
+      return FreeMart.request({
+        $key: 'key'
+      }).should.equal('value');
+    });
+    it("requestAsync should work with hash", function() {
+      var result;
+      FreeMart.register('key', 'value');
+      result = null;
+      FreeMart.requestAsync({
+        $key: 'key'
+      }).then(function(value) {
+        return result = value;
+      });
+      return result.should.equal('value');
+    });
     it("value/request should work", function() {
       var value;
       value = function() {};
@@ -386,6 +403,19 @@
       result[0].should.equal('first');
       return result[1].should.equal('second');
     });
+    it("requestAll should work with async provider", function() {
+      var deferred, result;
+      deferred = new Deferred();
+      FreeMart.register('key', deferred);
+      FreeMart.register('key', 'second');
+      result = null;
+      FreeMart.requestAllAsync('key').then(function(value) {
+        return result = value;
+      });
+      deferred.resolve('first');
+      result[0].should.equal('first');
+      return result[1].should.equal('second');
+    });
     it("requestAllAsync should work", function() {
       var result;
       FreeMart.register('key', 'first');
@@ -476,28 +506,11 @@
       };
       return expect(func).toThrow(new Error("NOT FOUND: key"));
     });
-    it("create should work", function() {
+    return it("create should work", function() {
       var instance;
       instance = FreeMart.create();
       instance.register('key', 'value');
       return instance.request('key').should.equal('value');
-    });
-    it("request should work with hash", function() {
-      FreeMart.register('key', 'value');
-      return FreeMart.request({
-        $key: 'key'
-      }).should.equal('value');
-    });
-    return it("requestAsync should work with hash", function() {
-      var result;
-      FreeMart.register('key', 'value');
-      result = null;
-      FreeMart.requestAsync({
-        $key: 'key'
-      }).then(function(value) {
-        return result = value;
-      });
-      return result.should.equal('value');
     });
   });
 

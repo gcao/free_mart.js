@@ -61,6 +61,19 @@ describe FreeMart, ->
 
     result.should.equal 'value a b'
 
+  it "request should work with hash", ->
+    FreeMart.register 'key', 'value'
+    FreeMart.request($key: 'key').should.equal 'value'
+
+  it "requestAsync should work with hash", ->
+    FreeMart.register 'key', 'value'
+
+    result = null
+    FreeMart.requestAsync($key: 'key').then (value) ->
+      result = value
+
+    result.should.equal 'value'
+
   it "value/request should work", ->
     value = ->
     FreeMart.value 'key', value
@@ -199,7 +212,7 @@ describe FreeMart, ->
     processed.should.equal true
 
   it "Used as router - is this a good idea?", ->
-    FreeMart.default     -> "404: Not Found"
+    FreeMart.default -> "404: Not Found"
     FreeMart.register "/"      , 'root'
     FreeMart.register "/first" , 'first page'
     FreeMart.register "/second", (_, params) -> "second page: #{JSON.stringify(params)}"
@@ -337,6 +350,19 @@ describe FreeMart, ->
     result[0].should.equal 'first'
     result[1].should.equal 'second'
 
+  it "requestAll should work with async provider", ->
+    deferred = new Deferred()
+    FreeMart.register 'key', deferred
+    FreeMart.register 'key', 'second'
+
+    result = null
+    FreeMart.requestAllAsync('key').then (value) ->
+      result = value
+
+    deferred.resolve 'first'
+    result[0].should.equal 'first'
+    result[1].should.equal 'second'
+
   it "requestAllAsync should work", ->
     FreeMart.register 'key', 'first'
     FreeMart.register 'key', 'second'
@@ -417,17 +443,4 @@ describe FreeMart, ->
     instance = FreeMart.create()
     instance.register 'key', 'value'
     instance.request('key').should.equal 'value'
-
-  it "request should work with hash", ->
-    FreeMart.register 'key', 'value'
-    FreeMart.request($key: 'key').should.equal 'value'
-
-  it "requestAsync should work with hash", ->
-    FreeMart.register 'key', 'value'
-
-    result = null
-    FreeMart.requestAsync($key: 'key').then (value) ->
-      result = value
-
-    result.should.equal 'value'
 
