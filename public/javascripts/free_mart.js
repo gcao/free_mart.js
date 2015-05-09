@@ -137,21 +137,31 @@
     };
 
     Registry.prototype.process = function() {
-      var args, i, item, options, processed, result, value, _i, _j, _len, _ref, _ref1, _ref2;
+      var args, i, item, options, processed, result, value, _i, _j, _len, _ref, _ref1, _ref2, _ref3;
       options = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       (_ref = this.market).log.apply(_ref, ["Registry.process", options].concat(__slice.call(args)));
       if (this.storage.length === 0) {
         if (this["default"]) {
-          return this["default"].apply(this, [options].concat(__slice.call(args)));
+          if (this["default"].hasOwnProperty('value')) {
+            return this["default"].value;
+          } else if (this["default"].hasOwnProperty('callback')) {
+            return (_ref1 = this["default"]).callback.apply(_ref1, [options].concat(__slice.call(args)));
+          } else if (this["default"].hasOwnProperty('factory')) {
+            return (function(func, args, ctor) {
+              ctor.prototype = func.prototype;
+              var child = new ctor, result = func.apply(child, args);
+              return Object(result) === result ? result : child;
+            })(this["default"].factory, [this.options].concat(__slice.call(args)), function(){});
+          }
         }
         return NO_PROVIDER;
       }
       if (options.$all) {
         result = [];
         processed = false;
-        _ref1 = this.storage;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          item = _ref1[_i];
+        _ref2 = this.storage;
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          item = _ref2[_i];
           if (item.accept) {
             if (!item.accept(options.$key)) {
               continue;
@@ -175,7 +185,7 @@
         }
       } else {
         processed = false;
-        for (i = _j = _ref2 = this.storage.length - 1; _ref2 <= 0 ? _j <= 0 : _j >= 0; i = _ref2 <= 0 ? ++_j : --_j) {
+        for (i = _j = _ref3 = this.storage.length - 1; _ref3 <= 0 ? _j <= 0 : _j >= 0; i = _ref3 <= 0 ? ++_j : --_j) {
           item = this.storage[i];
           if (item.processing(options.$key)) {
             continue;
@@ -414,14 +424,14 @@
     }
 
     Provider.prototype.process = function() {
-      var args, options, result, _ref, _ref1;
+      var args, options, result, _ref;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       (_ref = this.market).log.apply(_ref, ["Provider.process"].concat(__slice.call(args)));
       result = this.options.$type === 'value' ? this.value : this.options.$type === 'factory' && typeof this.value === 'function' ? (function(func, args, ctor) {
         ctor.prototype = func.prototype;
         var child = new ctor, result = func.apply(child, args);
         return Object(result) === result ? result : child;
-      })(this.value, args, function(){}) : (typeof this.value === 'object' || typeof this.value === 'function') && typeof this.value.$get === 'function' ? (_ref1 = this.value).$get.apply(_ref1, args) : typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
+      })(this.value, args, function(){}) : typeof this.value === 'function' ? this.value.apply(this, args) : this.value;
       options = args[0];
       if (options != null ? options.$async : void 0) {
         if (isDeferred(result)) {
@@ -512,33 +522,6 @@
       return this.register(key, {
         $type: 'factory'
       }, value);
-    };
-
-    FreeMartInternal.prototype.provider = function(provider) {
-      var key, options, value;
-      this.log('provider', provider);
-      if (typeof provider === 'function') {
-        return this.register(void 0, {}, provider);
-      }
-      if (!(provider.hasOwnProperty('$accept') && provider.hasOwnProperty('$get'))) {
-        throw 'Invalid provider: $accept and $get are required';
-      }
-      key = provider.$accept;
-      if (typeof key === 'function') {
-        key = key.bind(provider);
-      }
-      options = {};
-      if (provider.hasOwnProperty('$async')) {
-        options.$async = provider.$async;
-      }
-      if (provider.hasOwnProperty('$type')) {
-        options.$type = provider.$type;
-      }
-      value = provider.$get;
-      if (typeof value === 'function') {
-        value = value.bind(provider);
-      }
-      return this.register(key, options, value);
     };
 
     FreeMartInternal.prototype["default"] = function(callback) {

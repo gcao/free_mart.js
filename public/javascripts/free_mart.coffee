@@ -90,7 +90,12 @@ class Registry
 
     if @storage.length is 0
       if @default
-        return @default(options, args...)
+        if @default.hasOwnProperty 'value'
+          return @default.value
+        else if @default.hasOwnProperty 'callback'
+          return @default.callback(options, args...)
+        else if @default.hasOwnProperty 'factory'
+          return new @default.factory(@options, args...)
 
       return NO_PROVIDER
 
@@ -260,8 +265,8 @@ class Provider
         @value
       else if @options.$type is 'factory' and typeof @value is 'function'
         new @value args...
-      else if (typeof @value is 'object' or typeof @value is 'function') and typeof @value.$get is 'function'
-        @value.$get(args...)
+      #else if (typeof @value is 'object' or typeof @value is 'function') and typeof @value.$get is 'function'
+      #  @value.$get(args...)
       else if typeof @value is 'function'
         @value args...
       else
@@ -328,26 +333,26 @@ class FreeMartInternal
     @log 'factory', key, value
     @register key, {$type: 'factory'}, value
 
-  provider: (provider) ->
-    @log 'provider', provider
+  #provider: (provider) ->
+  #  @log 'provider', provider
 
-    if typeof provider is 'function'
-      return @register undefined, {}, provider
+  #  if typeof provider is 'function'
+  #    return @register undefined, {}, provider
 
-    unless provider.hasOwnProperty('$accept') and provider.hasOwnProperty('$get')
-      throw 'Invalid provider: $accept and $get are required'
+  #  unless provider.hasOwnProperty('$accept') and provider.hasOwnProperty('$get')
+  #    throw 'Invalid provider: $accept and $get are required'
 
-    key = provider.$accept
-    key = key.bind(provider) if typeof key is 'function'
+  #  key = provider.$accept
+  #  key = key.bind(provider) if typeof key is 'function'
 
-    options = {}
-    options.$async = provider.$async if provider.hasOwnProperty '$async'
-    options.$type  = provider.$type  if provider.hasOwnProperty '$type'
+  #  options = {}
+  #  options.$async = provider.$async if provider.hasOwnProperty '$async'
+  #  options.$type  = provider.$type  if provider.hasOwnProperty '$type'
 
-    value = provider.$get
-    value = value.bind(provider) if typeof value is 'function'
+  #  value = provider.$get
+  #  value = value.bind(provider) if typeof value is 'function'
 
-    @register key, options, value
+  #  @register key, options, value
 
   default: (callback) ->
     @registry.default = callback

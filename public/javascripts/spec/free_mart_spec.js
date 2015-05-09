@@ -124,58 +124,6 @@
       });
       return result.value.should.equal('value');
     });
-    it("provider/request should work", function() {
-      FreeMart.provider({
-        $accept: 'key',
-        $get: 'value'
-      });
-      return FreeMart.request('key').should.equal('value');
-    });
-    it("one-function provider/request should work", function() {
-      FreeMart.provider(function(options) {
-        if (options.$key === 'key') {
-          return 'value';
-        } else {
-          return FreeMart.NOT_FOUND;
-        }
-      });
-      return FreeMart.request('key').should.equal('value');
-    });
-    it("one-function provider/requestAsync should work", function() {
-      var result;
-      FreeMart.provider(function(options) {
-        if (options.$key === 'key') {
-          return 'value';
-        } else {
-          return FreeMart.NOT_FOUND;
-        }
-      });
-      result = null;
-      FreeMart.requestAsync('key').then(function(value) {
-        return result = value;
-      });
-      return result.should.equal('value');
-    });
-    it("provider/requestAsync should work", function() {
-      var result;
-      FreeMart.provider({
-        $accept: 'key',
-        $get: 'value'
-      });
-      result = null;
-      FreeMart.requestAsync('key').then(function(value) {
-        return result = value;
-      });
-      return result.should.equal('value');
-    });
-    it("register a raw provider should work", function() {
-      FreeMart.register('key', {
-        $get: function() {
-          return 'value';
-        }
-      });
-      return FreeMart.request('key').should.equal('value');
-    });
     it("register should take function as key", function() {
       var callback, func;
       callback = function(key) {
@@ -189,10 +137,26 @@
       return expect(func).toThrow(new Error("NO PROVIDER: key1"));
     });
     it("default should work", function() {
-      FreeMart["default"](function(options) {
-        return "default(" + options.$key + ")";
+      FreeMart["default"]({
+        value: 'value'
+      });
+      return FreeMart.request('key').should.equal('value');
+    });
+    it("default callback should work", function() {
+      FreeMart["default"]({
+        callback: function(options) {
+          return "default(" + options.$key + ")";
+        }
       });
       return FreeMart.request('key').should.equal('default(key)');
+    });
+    it("default factory should work", function() {
+      FreeMart["default"]({
+        factory: function() {
+          return this.value = 'value';
+        }
+      });
+      return FreeMart.request('key').value.should.equal('value');
     });
     it("requestAsync should work with promises", function() {
       var deferred, result;

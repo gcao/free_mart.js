@@ -105,48 +105,48 @@ describe FreeMart, ->
       result = value
     result.value.should.equal 'value'
 
-  it "provider/request should work", ->
-    FreeMart.provider
-      $accept: 'key'
-      $get:    'value'
+  #it "provider/request should work", ->
+  #  FreeMart.provider
+  #    $accept: 'key'
+  #    $get:    'value'
 
-    FreeMart.request('key').should.equal 'value'
+  #  FreeMart.request('key').should.equal 'value'
 
-  it "one-function provider/request should work", ->
-    FreeMart.provider (options) ->
-      if options.$key is 'key'
-        'value'
-      else
-        FreeMart.NOT_FOUND
+  #it "one-function provider/request should work", ->
+  #  FreeMart.provider (options) ->
+  #    if options.$key is 'key'
+  #      'value'
+  #    else
+  #      FreeMart.NOT_FOUND
 
-    FreeMart.request('key').should.equal 'value'
+  #  FreeMart.request('key').should.equal 'value'
 
-  it "one-function provider/requestAsync should work", ->
-    FreeMart.provider (options) ->
-      if options.$key is 'key'
-        'value'
-      else
-        FreeMart.NOT_FOUND
+  #it "one-function provider/requestAsync should work", ->
+  #  FreeMart.provider (options) ->
+  #    if options.$key is 'key'
+  #      'value'
+  #    else
+  #      FreeMart.NOT_FOUND
 
-    result = null
-    FreeMart.requestAsync('key').then (value) ->
-      result = value
-    result.should.equal 'value'
+  #  result = null
+  #  FreeMart.requestAsync('key').then (value) ->
+  #    result = value
+  #  result.should.equal 'value'
 
-  it "provider/requestAsync should work", ->
-    FreeMart.provider
-      $accept: 'key'
-      $get:    'value'
+  #it "provider/requestAsync should work", ->
+  #  FreeMart.provider
+  #    $accept: 'key'
+  #    $get:    'value'
 
-    result = null
-    FreeMart.requestAsync('key').then (value) ->
-      result = value
+  #  result = null
+  #  FreeMart.requestAsync('key').then (value) ->
+  #    result = value
 
-    result.should.equal 'value'
+  #  result.should.equal 'value'
 
-  it "register a raw provider should work", ->
-    FreeMart.register 'key', $get: -> 'value'
-    FreeMart.request('key').should.equal 'value'
+  #it "register a raw provider should work", ->
+  #  FreeMart.register 'key', $get: -> 'value'
+  #  FreeMart.request('key').should.equal 'value'
 
   it "register should take function as key", ->
     callback = (key) -> key is 'key'
@@ -157,9 +157,19 @@ describe FreeMart, ->
     expect(func).toThrow(new Error("NO PROVIDER: key1"))
 
   it "default should work", ->
-    FreeMart.default (options) -> "default(#{options.$key})"
+    FreeMart.default value: 'value'
+
+    FreeMart.request('key').should.equal 'value'
+
+  it "default callback should work", ->
+    FreeMart.default callback: (options) -> "default(#{options.$key})"
 
     FreeMart.request('key').should.equal 'default(key)'
+
+  it "default factory should work", ->
+    FreeMart.default factory: -> @value = 'value'
+
+    FreeMart.request('key').value.should.equal 'value'
 
   it "requestAsync should work with promises", ->
     deferred = new Deferred()
