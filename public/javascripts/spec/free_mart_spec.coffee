@@ -107,8 +107,8 @@ describe FreeMart, ->
 
   #it "provider/request should work", ->
   #  FreeMart.provider
-  #    $accept: 'key'
-  #    $get:    'value'
+  #    key   : 'key'
+  #    value : 'value'
 
   #  FreeMart.request('key').should.equal 'value'
 
@@ -135,8 +135,8 @@ describe FreeMart, ->
 
   #it "provider/requestAsync should work", ->
   #  FreeMart.provider
-  #    $accept: 'key'
-  #    $get:    'value'
+  #    key   : 'key'
+  #    value : 'value'
 
   #  result = null
   #  FreeMart.requestAsync('key').then (value) ->
@@ -145,7 +145,7 @@ describe FreeMart, ->
   #  result.should.equal 'value'
 
   #it "register a raw provider should work", ->
-  #  FreeMart.register 'key', $get: -> 'value'
+  #  FreeMart.register 'key', FreeMart.provider(value: -> 'value')
   #  FreeMart.request('key').should.equal 'value'
 
   it "register should take function as key", ->
